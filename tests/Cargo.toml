@@ -1,0 +1,12 @@
+[package]
+name = "program-tests"
+version = { workspace = true }
+edition = { workspace = true }
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+litesvm = { workspace = true }
+solana-keypair = { workspace = true }
+pinocchio_counter = { workspace = true }

@@ -1,0 +1,11 @@
+#!/bin/bash
+set -euo pipefail
+
+source $(dirname $0)/env.sh
+
+build-pinocchio-counter
+
+echo "> Testing pinocchio_counter..."
+cargo test -p program-tests pinocchio_counter_tests
+
+echo "> Test complete!"

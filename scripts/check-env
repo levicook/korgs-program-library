@@ -28,20 +28,6 @@ else
     exit 1
 fi
 
-# Check sbpf-linker
-if command -v sbpf-linker &> /dev/null; then
-    ACTUAL_LINKER=$(sbpf-linker --version | awk '{print $2}')
-    if [ "$ACTUAL_LINKER" = "$SBF_LINKER_VERSION" ]; then
-        echo "✓ sbpf-linker $ACTUAL_LINKER"
-    else
-        echo "✗ sbpf-linker $ACTUAL_LINKER (expected $SBF_LINKER_VERSION)"
-        exit 1
-    fi
-else
-    echo "✗ sbpf-linker not found (run setup-env)"
-    exit 1
-fi
-
 # Check solana
 if command -v solana &> /dev/null; then
     ACTUAL_SOLANA=$(solana --version | awk '{print $2}')

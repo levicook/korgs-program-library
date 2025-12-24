@@ -6,7 +6,7 @@ echo "> Removing project tools from $CARGO_INSTALL_ROOT..."
 rm -rf "$CARGO_INSTALL_ROOT"
 
 echo "> Cleaning build artifacts..."
-cargo clean 2>/dev/null || true
+cargo clean || true
 
 echo "> Teardown complete!"
-echo "> Run setup.sh to reinstall tools"
+echo "> Run setup-env to reinstall tools"

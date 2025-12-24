@@ -51,3 +51,7 @@ check-env
 ## Tool Versions
 
 See `scripts/env.sh` for pinned tool versions.
+
+## License
+
+MIT License - see [LICENSE](LICENSE) file for details.

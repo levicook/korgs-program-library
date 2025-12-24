@@ -1,0 +1,14 @@
+#!/bin/bash
+set -euo pipefail
+source $(dirname $0)/env.sh
+
+cargo install cargo-binstall@${BINSTALL_VERSION}
+echo "> cargo-binstall v${BINSTALL_VERSION} installed..."
+
+cargo binstall sbpf-linker@${SBF_LINKER_VERSION} --no-confirm
+echo "> sbpf-linker v${SBF_LINKER_VERSION} installed..."
+
+cargo binstall solana-cli@${SOLANA_CLI_VERSION} --no-confirm
+echo "> solana-cli v${SOLANA_CLI_VERSION} installed..."
+
+echo "> Setup complete!"

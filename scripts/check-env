@@ -1,0 +1,59 @@
+#!/bin/bash
+set -euo pipefail
+
+source $(dirname $0)/env.sh
+
+echo "Checking environment..."
+
+# Check Rust version
+ACTUAL_RUST=$(rustc --version | awk '{print $2}')
+if [ "$ACTUAL_RUST" = "$EXPECTED_RUST" ]; then
+    echo "✓ Rust $ACTUAL_RUST"
+else
+    echo "✗ Rust $ACTUAL_RUST (expected $EXPECTED_RUST)"
+    exit 1
+fi
+
+# Check cargo-binstall
+if command -v cargo-binstall &> /dev/null; then
+    ACTUAL_BINSTALL=$(cargo-binstall -V)
+    if [ "$ACTUAL_BINSTALL" = "$BINSTALL_VERSION" ]; then
+        echo "✓ cargo-binstall $ACTUAL_BINSTALL"
+    else
+        echo "✗ cargo-binstall $ACTUAL_BINSTALL (expected $BINSTALL_VERSION)"
+        exit 1
+    fi
+else
+    echo "✗ cargo-binstall not found (run setup-env)"
+    exit 1
+fi
+
+# Check sbpf-linker
+if command -v sbpf-linker &> /dev/null; then
+    ACTUAL_LINKER=$(sbpf-linker --version | awk '{print $2}')
+    if [ "$ACTUAL_LINKER" = "$SBF_LINKER_VERSION" ]; then
+        echo "✓ sbpf-linker $ACTUAL_LINKER"
+    else
+        echo "✗ sbpf-linker $ACTUAL_LINKER (expected $SBF_LINKER_VERSION)"
+        exit 1
+    fi
+else
+    echo "✗ sbpf-linker not found (run setup-env)"
+    exit 1
+fi
+
+# Check solana
+if command -v solana &> /dev/null; then
+    ACTUAL_SOLANA=$(solana --version | awk '{print $2}')
+    if [ "$ACTUAL_SOLANA" = "$SOLANA_CLI_VERSION" ]; then
+        echo "✓ solana $ACTUAL_SOLANA"
+    else
+        echo "✗ solana $ACTUAL_SOLANA (expected $SOLANA_CLI_VERSION)"
+        exit 1
+    fi
+else
+    echo "✗ solana not found (run setup-env)"
+    exit 1
+fi
+
+echo "✓ Environment ready!"

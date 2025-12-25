@@ -2,10 +2,19 @@
 set -euo pipefail
 
 source $(dirname $0)/env.sh
+cd $PROJECT_ROOT
 
-build-pinocchio-counter
+./scripts/build-pinocchio-counter
 
-echo "> Testing pinocchio_counter..."
-cargo test -p program-tests pinocchio_counter_tests
+echo "> Unit testing pinocchio_counter_program..."
+cd $PROJECT_ROOT/programs/pinocchio_counter_program
+cargo test-sbf
+cd $PROJECT_ROOT
+
+echo "> Unit testing pinocchio_counter_client..."
+cargo test -p pinocchio_counter_client
+
+echo "> Integration testing pinocchio_counter..."
+cargo test -p integration-tests pinocchio_counter_tests
 
 echo "> Test complete!"

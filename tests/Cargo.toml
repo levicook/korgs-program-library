@@ -1,5 +1,5 @@
 [package]
-name = "program-tests"
+name = "integration-tests"
 version = { workspace = true }
 edition = { workspace = true }
 
@@ -8,5 +8,10 @@ path = "lib.rs"
 
 [dependencies]
 litesvm = { workspace = true }
-solana-keypair = { workspace = true }
+pinocchio_counter_client = { workspace = true }
 pinocchio_counter_program = { workspace = true, features = ["no-entrypoint"] }
+solana-hash = { workspace = true }
+solana-instruction = { workspace = true }
+solana-keypair = { workspace = true }
+solana-pubkey = { workspace = true }
+solana-transaction = { workspace = true }

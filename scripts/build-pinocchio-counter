@@ -9,6 +9,6 @@ cargo build-sbf
 
 echo "> Building pinocchio_counter_client..."
 cd $PROJECT_ROOT/clients/rust/pinocchio_counter_client
-cargo build
+cargo build -p pinocchio_counter_client
 
 echo "> Build complete!"

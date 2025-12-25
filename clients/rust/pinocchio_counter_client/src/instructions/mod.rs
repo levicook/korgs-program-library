@@ -1,3 +1,3 @@
-mod create_counter_v1;
+mod create_counter_v1_ix;
 
-pub use create_counter_v1::{CreateCounterV1, CreateCounterV1Error};
+pub use create_counter_v1_ix::{CreateCounterV1Ix, CreateCounterV1IxError};

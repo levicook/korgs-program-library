@@ -945,6 +945,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "integration-tests"
+version = "0.1.0"
+dependencies = [
+ "litesvm",
+ "pinocchio_counter_client",
+ "pinocchio_counter_program",
+ "solana-hash 3.0.0",
+ "solana-instruction",
+ "solana-keypair",
+ "solana-pubkey 3.0.0",
+ "solana-transaction",
+]
+
+[[package]]
 name = "itertools"
 version = "0.10.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1379,9 +1393,15 @@ name = "pinocchio_counter_client"
 version = "0.1.0"
 dependencies = [
  "pinocchio_counter_program",
+ "solana-hash 3.0.0",
  "solana-instruction",
+ "solana-keypair",
+ "solana-message",
  "solana-pubkey 3.0.0",
+ "solana-sanitize",
+ "solana-signature",
  "solana-system-program",
+ "solana-transaction",
  "thiserror 2.0.17",
  "wincode",
 ]
@@ -1443,15 +1463,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5ee95bc4ef87b8d5ba32e8b7714ccc834865276eab0aed5c9958d00ec45f49e8"
 dependencies = [
  "unicode-ident",
-]
-
-[[package]]
-name = "program-tests"
-version = "0.1.0"
-dependencies = [
- "litesvm",
- "pinocchio_counter_program",
- "solana-keypair",
 ]
 
 [[package]]

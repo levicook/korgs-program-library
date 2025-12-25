@@ -20,40 +20,38 @@ pub enum CounterError {
 pub type CounterResult<T> = Result<T, CounterError>;
 
 impl CounterError {
+    #[must_use]
     pub fn as_str(&self) -> &'static str {
-        use CounterError::*;
         match self {
-            CounterAddressMismatch => "Counter address must match",
-            CounterMustBeEmpty => "Counter must be empty",
-            CounterMustBeOwnedBySystemProgram => "Counter must be owned by system program",
-            CounterMustBeWriteable => "Counter must be writable",
-            CounterMustHaveZeroLamports => "Counter must have zero lamports",
-            InvalidInstructionDiscriminator(_) => "Invalid instruction discriminator",
-            NotEnoughAccounts { .. } => "Not enough accounts",
-            PayerMustBeSigner => "Payer must be a signer",
-            SerializeError => "Serialization error",
-            SerializedSizeMismatch { .. } => "Serialized size mismatch",
-            SystemProgramAddressMismatch => "System program address must match",
+            Self::CounterAddressMismatch => "Counter address must match",
+            Self::CounterMustBeEmpty => "Counter must be empty",
+            Self::CounterMustBeOwnedBySystemProgram => "Counter must be owned by system program",
+            Self::CounterMustBeWriteable => "Counter must be writable",
+            Self::CounterMustHaveZeroLamports => "Counter must have zero lamports",
+            Self::InvalidInstructionDiscriminator(_) => "Invalid instruction discriminator",
+            Self::NotEnoughAccounts { .. } => "Not enough accounts",
+            Self::PayerMustBeSigner => "Payer must be a signer",
+            Self::SerializeError => "Serialization error",
+            Self::SerializedSizeMismatch { .. } => "Serialized size mismatch",
+            Self::SystemProgramAddressMismatch => "System program address must match",
         }
     }
 }
 
 impl From<CounterError> for ProgramError {
     fn from(e: CounterError) -> Self {
-        use CounterError::*;
-
         let code = match e {
-            CounterAddressMismatch => 1,
-            CounterMustBeEmpty => 2,
-            CounterMustBeOwnedBySystemProgram => 3,
-            CounterMustBeWriteable => 4,
-            CounterMustHaveZeroLamports => 5,
-            InvalidInstructionDiscriminator(_) => 6,
-            NotEnoughAccounts { .. } => 7,
-            PayerMustBeSigner => 8,
-            SerializeError => 9,
-            SerializedSizeMismatch { .. } => 10,
-            SystemProgramAddressMismatch => 11,
+            CounterError::CounterAddressMismatch => 1,
+            CounterError::CounterMustBeEmpty => 2,
+            CounterError::CounterMustBeOwnedBySystemProgram => 3,
+            CounterError::CounterMustBeWriteable => 4,
+            CounterError::CounterMustHaveZeroLamports => 5,
+            CounterError::InvalidInstructionDiscriminator(_) => 6,
+            CounterError::NotEnoughAccounts { .. } => 7,
+            CounterError::PayerMustBeSigner => 8,
+            CounterError::SerializeError => 9,
+            CounterError::SerializedSizeMismatch { .. } => 10,
+            CounterError::SystemProgramAddressMismatch => 11,
         };
 
         ProgramError::Custom(code)

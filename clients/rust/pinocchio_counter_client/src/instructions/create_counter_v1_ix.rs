@@ -5,7 +5,7 @@ use solana_pubkey::Pubkey;
 use crate::find_counter_address;
 
 #[derive(Debug, thiserror::Error)]
-pub enum CreateCounterV1Error {
+pub enum CreateCounterV1IxError {
     #[error("Payer must be a signer")]
     PayerMustBeSigner,
 
@@ -22,16 +22,15 @@ pub enum CreateCounterV1Error {
     SystemProgramAddressMismatch { expected: Pubkey, observed: Pubkey },
 }
 
-pub struct CreateCounterV1 {
+pub struct CreateCounterV1Ix {
     pub program_id: Pubkey,
-
-    // accounts
     pub payer: AccountMeta,
     pub counter: AccountMeta,
     pub system_program: AccountMeta,
 }
 
-impl CreateCounterV1 {
+impl CreateCounterV1Ix {
+    #[must_use]
     pub fn new(program_id: Pubkey, payer: Pubkey) -> Self {
         let (counter, _bump) = find_counter_address(&program_id, &payer);
 
@@ -55,29 +54,39 @@ impl CreateCounterV1 {
         }
     }
 
-    pub fn validate(&self) -> Result<(), CreateCounterV1Error> {
+    /// Validates that the account metadata and addresses are correct.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`CreateCounterV1Error`] if:
+    /// - Payer is not marked as a signer
+    /// - Payer is not marked as writable
+    /// - Counter address doesn't match the derived PDA address
+    /// - Counter is not marked as writable
+    /// - System program address is incorrect
+    pub fn validate(&self) -> Result<(), CreateCounterV1IxError> {
         if !self.payer.is_signer {
-            return Err(CreateCounterV1Error::PayerMustBeSigner);
+            return Err(CreateCounterV1IxError::PayerMustBeSigner);
         }
 
         if !self.payer.is_writable {
-            return Err(CreateCounterV1Error::PayerMustBeWritable);
+            return Err(CreateCounterV1IxError::PayerMustBeWritable);
         }
 
         let (expected_counter, _bump) = find_counter_address(&self.program_id, &self.payer.pubkey);
         if self.counter.pubkey != expected_counter {
-            return Err(CreateCounterV1Error::CounterAddressMismatch {
+            return Err(CreateCounterV1IxError::CounterAddressMismatch {
                 expected: expected_counter,
                 observed: self.counter.pubkey,
             });
         }
 
         if !self.counter.is_writable {
-            return Err(CreateCounterV1Error::CounterMustBeWritable);
+            return Err(CreateCounterV1IxError::CounterMustBeWritable);
         }
 
         if self.system_program.pubkey != solana_system_program::id() {
-            return Err(CreateCounterV1Error::SystemProgramAddressMismatch {
+            return Err(CreateCounterV1IxError::SystemProgramAddressMismatch {
                 expected: solana_system_program::id(),
                 observed: self.system_program.pubkey,
             });
@@ -86,7 +95,13 @@ impl CreateCounterV1 {
         Ok(())
     }
 
-    pub fn to_instruction(self, validate: bool) -> Result<Instruction, CreateCounterV1Error> {
+    /// Converts the instruction builder into a Solana instruction.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`CreateCounterV1Error`] if `validate` is `true` and validation fails.
+    /// See [`validate`](Self::validate) for error conditions.
+    pub fn to_instruction(self, validate: bool) -> Result<Instruction, CreateCounterV1IxError> {
         if validate {
             self.validate()?;
         }
@@ -99,10 +114,10 @@ impl CreateCounterV1 {
     }
 }
 
-impl TryFrom<CreateCounterV1> for Instruction {
-    type Error = CreateCounterV1Error;
+impl TryFrom<CreateCounterV1Ix> for Instruction {
+    type Error = CreateCounterV1IxError;
 
-    fn try_from(value: CreateCounterV1) -> Result<Self, Self::Error> {
+    fn try_from(value: CreateCounterV1Ix) -> Result<Self, Self::Error> {
         value.to_instruction(true)
     }
 }
@@ -118,7 +133,7 @@ mod tests {
         let program_id = Pubkey::new_unique();
         let payer = Pubkey::new_unique();
 
-        let create = CreateCounterV1::new(program_id, payer);
+        let create = CreateCounterV1Ix::new(program_id, payer);
         let (expected_counter, _bump) = find_counter_address(&program_id, &payer);
 
         assert_eq!(create.counter.pubkey, expected_counter);
@@ -131,7 +146,7 @@ mod tests {
         let program_id = Pubkey::new_unique();
         let payer = Pubkey::new_unique();
 
-        let create = CreateCounterV1::new(program_id, payer);
+        let create = CreateCounterV1Ix::new(program_id, payer);
 
         // Payer should be signer and writable
         assert!(create.payer.is_signer);
@@ -152,7 +167,7 @@ mod tests {
         let program_id = Pubkey::new_unique();
         let payer = Pubkey::new_unique();
 
-        let create = CreateCounterV1::new(program_id, payer);
+        let create = CreateCounterV1Ix::new(program_id, payer);
         assert!(create.validate().is_ok());
     }
 
@@ -161,12 +176,12 @@ mod tests {
         let program_id = Pubkey::new_unique();
         let payer = Pubkey::new_unique();
 
-        let mut create = CreateCounterV1::new(program_id, payer);
+        let mut create = CreateCounterV1Ix::new(program_id, payer);
         create.payer.is_signer = false;
 
         let err = create.validate().unwrap_err();
         match err {
-            CreateCounterV1Error::PayerMustBeSigner => {}
+            CreateCounterV1IxError::PayerMustBeSigner => {}
             _ => panic!("Expected PayerMustBeSigner, got {:?}", err),
         }
         assert_eq!(err.to_string(), "Payer must be a signer");
@@ -177,12 +192,12 @@ mod tests {
         let program_id = Pubkey::new_unique();
         let payer = Pubkey::new_unique();
 
-        let mut create = CreateCounterV1::new(program_id, payer);
+        let mut create = CreateCounterV1Ix::new(program_id, payer);
         create.payer.is_writable = false;
 
         let err = create.validate().unwrap_err();
         match err {
-            CreateCounterV1Error::PayerMustBeWritable => {}
+            CreateCounterV1IxError::PayerMustBeWritable => {}
             _ => panic!("Expected PayerMustBeWritable, got {:?}", err),
         }
         assert_eq!(err.to_string(), "Payer must be writable");
@@ -194,13 +209,13 @@ mod tests {
         let payer = Pubkey::new_unique();
         let (expected_counter, _) = find_counter_address(&program_id, &payer);
 
-        let mut create = CreateCounterV1::new(program_id, payer);
+        let mut create = CreateCounterV1Ix::new(program_id, payer);
         let wrong_counter = Pubkey::new_unique();
         create.counter.pubkey = wrong_counter; // Wrong address
 
         let err = create.validate().unwrap_err();
         match &err {
-            CreateCounterV1Error::CounterAddressMismatch { expected, observed } => {
+            CreateCounterV1IxError::CounterAddressMismatch { expected, observed } => {
                 assert_eq!(expected, &expected_counter);
                 assert_eq!(observed, &wrong_counter);
             }
@@ -230,12 +245,12 @@ mod tests {
         let program_id = Pubkey::new_unique();
         let payer = Pubkey::new_unique();
 
-        let mut create = CreateCounterV1::new(program_id, payer);
+        let mut create = CreateCounterV1Ix::new(program_id, payer);
         create.counter.is_writable = false;
 
         let err = create.validate().unwrap_err();
         match err {
-            CreateCounterV1Error::CounterMustBeWritable => {}
+            CreateCounterV1IxError::CounterMustBeWritable => {}
             _ => panic!("Expected CounterMustBeWritable, got {:?}", err),
         }
         assert_eq!(err.to_string(), "Counter must be writable");
@@ -247,13 +262,13 @@ mod tests {
         let payer = Pubkey::new_unique();
         let expected_system_program = solana_system_program::id();
 
-        let mut create = CreateCounterV1::new(program_id, payer);
+        let mut create = CreateCounterV1Ix::new(program_id, payer);
         let wrong_system_program = Pubkey::new_unique();
         create.system_program.pubkey = wrong_system_program; // Wrong address
 
         let err = create.validate().unwrap_err();
         match &err {
-            CreateCounterV1Error::SystemProgramAddressMismatch { expected, observed } => {
+            CreateCounterV1IxError::SystemProgramAddressMismatch { expected, observed } => {
                 assert_eq!(expected, &expected_system_program);
                 assert_eq!(observed, &wrong_system_program);
             }
@@ -283,7 +298,7 @@ mod tests {
         let payer = Pubkey::new_unique();
         let (expected_counter, _) = find_counter_address(&program_id, &payer);
 
-        let create = CreateCounterV1::new(program_id, payer);
+        let create = CreateCounterV1Ix::new(program_id, payer);
         let instruction = create.to_instruction(true).unwrap();
 
         assert_eq!(instruction.program_id, program_id);
@@ -303,19 +318,19 @@ mod tests {
         let payer = Pubkey::new_unique();
 
         // Valid struct - should work with or without validation
-        let create = CreateCounterV1::new(program_id, payer);
+        let create = CreateCounterV1Ix::new(program_id, payer);
         assert!(create.to_instruction(true).is_ok());
 
-        let create2 = CreateCounterV1::new(program_id, payer);
+        let create2 = CreateCounterV1Ix::new(program_id, payer);
         assert!(create2.to_instruction(false).is_ok());
 
         // Invalid struct - should fail with validation, succeed without
-        let mut create3 = CreateCounterV1::new(program_id, payer);
+        let mut create3 = CreateCounterV1Ix::new(program_id, payer);
         create3.payer.is_signer = false;
 
         assert!(create3.to_instruction(true).is_err());
 
-        let mut create4 = CreateCounterV1::new(program_id, payer);
+        let mut create4 = CreateCounterV1Ix::new(program_id, payer);
         create4.payer.is_signer = false;
         // This should succeed even though it's invalid
         let instruction = create4.to_instruction(false).unwrap();
@@ -327,7 +342,7 @@ mod tests {
         let program_id = Pubkey::new_unique();
         let payer = Pubkey::new_unique();
 
-        let create = CreateCounterV1::new(program_id, payer);
+        let create = CreateCounterV1Ix::new(program_id, payer);
         let instruction = Instruction::try_from(create).unwrap();
 
         assert_eq!(instruction.program_id, program_id);
@@ -343,12 +358,12 @@ mod tests {
         let program_id = Pubkey::new_unique();
         let payer = Pubkey::new_unique();
 
-        let mut create = CreateCounterV1::new(program_id, payer);
+        let mut create = CreateCounterV1Ix::new(program_id, payer);
         create.payer.is_signer = false;
 
         let err = Instruction::try_from(create).unwrap_err();
         match err {
-            CreateCounterV1Error::PayerMustBeSigner => {}
+            CreateCounterV1IxError::PayerMustBeSigner => {}
             _ => panic!("Expected PayerMustBeSigner, got {:?}", err),
         }
     }

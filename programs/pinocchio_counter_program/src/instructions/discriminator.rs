@@ -11,6 +11,15 @@ pub enum InstructionDiscriminator {
 }
 
 impl InstructionDiscriminator {
+    /// Parses the instruction discriminator from the first byte of instruction data.
+    ///
+    /// Returns the discriminator and the remaining instruction data.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`CounterError::InvalidInstructionDiscriminator`] if:
+    /// - The instruction data is empty
+    /// - The discriminator byte is not a valid instruction type
     pub fn parse(instruction_data: &[u8]) -> CounterResult<(Self, &[u8])> {
         let (first, rest) = instruction_data
             .split_first()

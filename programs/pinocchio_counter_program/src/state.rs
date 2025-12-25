@@ -18,6 +18,13 @@ pub struct CounterV1 {
 }
 
 impl CounterV1 {
+    /// Returns the size in bytes required to store a [`CounterV1`] account.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the type metadata indicates a dynamic size, which should never
+    /// happen for [`CounterV1`] as it has a fixed layout.
+    #[must_use]
     pub const fn size() -> usize {
         match <Self as wincode::SchemaWrite>::TYPE_META {
             wincode::TypeMeta::Static { size, .. } => size,
@@ -25,6 +32,11 @@ impl CounterV1 {
         }
     }
 
+    /// Serializes the counter state to bytes.
+    ///
+    /// # Errors
+    ///
+    /// Returns a [`wincode::WriteResult`] error if serialization fails.
     pub fn serialize(&self) -> wincode::WriteResult<Vec<u8>> {
         wincode::serialize(self)
     }

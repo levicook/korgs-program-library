@@ -17,7 +17,18 @@ pub struct CreateCounterV1Accounts<'a> {
     pub system_program: &'a AccountInfo,
 }
 
-impl<'a> CreateCounterV1<'a> {
+impl CreateCounterV1<'_> {
+    /// Executes the create counter instruction.
+    ///
+    /// Creates a new counter account owned by the program with the payer as the owner.
+    ///
+    /// # Errors
+    ///
+    /// Returns a [`ProgramResult`] error if:
+    /// - Account creation fails (insufficient funds, account already exists, etc.)
+    /// - State serialization fails
+    /// - Serialized state size doesn't match expected size
+    /// - Data mutation fails
     pub fn execute(&self) -> ProgramResult {
         let owner = self.accounts.payer.key();
         let owner_ref = owner.as_ref();

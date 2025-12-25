@@ -14,3 +14,6 @@ unexpected_cfgs = { level = "warn", check-cfg = ['cfg(target_os, values("solana"
 
 [dependencies]
 pinocchio = { workspace = true }
+pinocchio-system = { workspace = true }
+thiserror = { workspace = true, default-features = false }
+wincode = { workspace = true, features = ["derive"] }

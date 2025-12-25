@@ -1,13 +1,23 @@
-use pinocchio::{account_info::AccountInfo, msg, pubkey::Pubkey, ProgramResult};
+use pinocchio::{account_info::AccountInfo, entrypoint, pubkey::Pubkey, ProgramResult};
 
-#[cfg(not(feature = "no-entrypoint"))]
-pinocchio::entrypoint!(process_instruction);
+use crate::{CreateCounterV1, InstructionDiscriminator};
+
+entrypoint!(process_instruction);
 
 pub fn process_instruction(
-    _program_id: &Pubkey,
-    _accounts: &[AccountInfo],
-    _instruction_data: &[u8],
+    program_id: &Pubkey,
+    accounts: &[AccountInfo],
+    instruction_data: &[u8],
 ) -> ProgramResult {
-    msg!("Hello from my program!");
-    Ok(())
+    let (discriminator, args) = InstructionDiscriminator::parse(instruction_data)?;
+
+    match discriminator {
+        InstructionDiscriminator::CreateCounterV1 => {
+            CreateCounterV1::try_from((program_id, accounts, args))?.execute()
+        }
+        InstructionDiscriminator::DeleteCounterV1 => todo!(),
+        InstructionDiscriminator::DecrementCountV1 => todo!(),
+        InstructionDiscriminator::IncrementCountV1 => todo!(),
+        InstructionDiscriminator::SetCountV1 => todo!(),
+    }
 }

@@ -5,4 +5,5 @@ export CARGO_INSTALL_ROOT="$PROJECT_ROOT/.tools"
 # Tools versions for this project
 export EXPECTED_RUST="1.92.0" # specified in rust-toolchain.toml
 export BINSTALL_VERSION="1.16.5"
-export SOLANA_CLI_VERSION="2.1.21"
+# export SOLANA_CLI_VERSION="2.1.21"
+export SOLANA_CLI_VERSION="3.1.5"

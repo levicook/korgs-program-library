@@ -8,4 +8,19 @@ echo "> cargo-binstall v${BINSTALL_VERSION} installed..."
 cargo binstall solana-cli@${SOLANA_CLI_VERSION} --no-confirm
 echo "> solana-cli v${SOLANA_CLI_VERSION} installed..."
 
+# Ensure platform tools match (requires agave-install to be installed separately)
+if command -v agave-install &> /dev/null; then
+    CURRENT_PLATFORM_VERSION=$(cargo build-sbf --version 2>&1 | head -n1 | awk '{print $2}' || echo "")
+    if [ "$CURRENT_PLATFORM_VERSION" != "$SOLANA_CLI_VERSION" ]; then
+        echo "> Installing Solana platform tools v${SOLANA_CLI_VERSION}..."
+        agave-install init ${SOLANA_CLI_VERSION}
+    else
+        echo "> Solana platform tools v${SOLANA_CLI_VERSION} already installed"
+    fi
+else
+    echo "⚠ Warning: agave-install not found."
+    echo "  Install it once with: sh -c \"\$(curl -sSfL https://release.anza.xyz/v${SOLANA_CLI_VERSION}/install)\""
+    echo "  Then run setup-env again."
+fi
+
 echo "> Setup complete!"

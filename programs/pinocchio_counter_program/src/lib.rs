@@ -10,7 +10,7 @@ pub use instructions::{CreateCounterV1, InstructionDiscriminator};
 use pinocchio::pubkey::{find_program_address, Pubkey};
 pub use state::{AccountDiscriminator, CounterV1};
 
-pub(crate) const COUNTER_SEED: &[u8] = b"counter";
+pub const COUNTER_SEED: &[u8] = b"counter";
 
 pub(crate) fn find_counter_address(program_id: &Pubkey, owner: &Pubkey) -> (Pubkey, u8) {
     let seeds = &[COUNTER_SEED, owner.as_ref()];

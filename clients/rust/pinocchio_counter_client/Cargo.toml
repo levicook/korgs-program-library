@@ -1,0 +1,13 @@
+[package]
+name = "pinocchio_counter_client"
+version = { workspace = true }
+edition = { workspace = true }
+
+[dependencies]
+pinocchio_counter_program = { workspace = true, features = ["no-entrypoint"] }
+
+solana-instruction = { workspace = true }
+solana-pubkey = { workspace = true, features = ["curve25519"] }
+solana-system-program = "3.0"
+thiserror = { workspace = true }
+wincode = { workspace = true }

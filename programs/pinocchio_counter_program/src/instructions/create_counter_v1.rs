@@ -18,7 +18,7 @@ pub struct CreateCounterV1Accounts<'a> {
 }
 
 impl<'a> CreateCounterV1<'a> {
-    pub(crate) fn execute(&self) -> ProgramResult {
+    pub fn execute(&self) -> ProgramResult {
         let owner = self.accounts.payer.key();
         let owner_ref = owner.as_ref();
         let bump_ref = &[self.accounts.counter_bump];

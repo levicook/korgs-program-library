@@ -1,5 +1,5 @@
 [package]
-name = "pinocchio_counter"
+name = "pinocchio_counter_program"
 version = { workspace = true }
 edition = { workspace = true }
 

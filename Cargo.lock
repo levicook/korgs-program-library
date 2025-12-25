@@ -1375,7 +1375,19 @@ dependencies = [
 ]
 
 [[package]]
-name = "pinocchio_counter"
+name = "pinocchio_counter_client"
+version = "0.1.0"
+dependencies = [
+ "pinocchio_counter_program",
+ "solana-instruction",
+ "solana-pubkey 3.0.0",
+ "solana-system-program",
+ "thiserror 2.0.17",
+ "wincode",
+]
+
+[[package]]
+name = "pinocchio_counter_program"
 version = "0.1.0"
 dependencies = [
  "pinocchio",
@@ -1438,7 +1450,7 @@ name = "program-tests"
 version = "0.1.0"
 dependencies = [
  "litesvm",
- "pinocchio_counter",
+ "pinocchio_counter_program",
  "solana-keypair",
 ]
 

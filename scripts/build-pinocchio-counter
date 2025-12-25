@@ -3,8 +3,12 @@ set -euo pipefail
 
 source $(dirname $0)/env.sh
 
-echo "> Building pinocchio_counter..."
-cd $PROJECT_ROOT/programs/pinocchio_counter
+echo "> Building pinocchio_counter_program..."
+cd $PROJECT_ROOT/programs/pinocchio_counter_program
 cargo build-sbf
+
+echo "> Building pinocchio_counter_client..."
+cd $PROJECT_ROOT/clients/rust/pinocchio_counter_client
+cargo build
 
 echo "> Build complete!"

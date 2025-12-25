@@ -34,6 +34,18 @@ impl TryFrom<&u8> for InstructionDiscriminator {
     }
 }
 
+impl From<InstructionDiscriminator> for u8 {
+    fn from(discriminator: InstructionDiscriminator) -> Self {
+        match discriminator {
+            InstructionDiscriminator::CreateCounterV1 => 1,
+            InstructionDiscriminator::DeleteCounterV1 => 2,
+            InstructionDiscriminator::DecrementCountV1 => 3,
+            InstructionDiscriminator::IncrementCountV1 => 4,
+            InstructionDiscriminator::SetCountV1 => 5,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -9,4 +9,4 @@ path = "lib.rs"
 [dependencies]
 litesvm = { workspace = true }
 solana-keypair = { workspace = true }
-pinocchio_counter = { workspace = true }
+pinocchio_counter_program = { workspace = true, features = ["no-entrypoint"] }

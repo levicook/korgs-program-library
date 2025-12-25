@@ -5,7 +5,7 @@ use solana_keypair::{Keypair, Signer};
 
 fn program_path() -> io::Result<PathBuf> {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../target/sbpf-solana-solana/release/pinocchio_counter.so")
+        .join("../target/sbpf-solana-solana/release/pinocchio_counter_program.so")
         .canonicalize()
 }
 

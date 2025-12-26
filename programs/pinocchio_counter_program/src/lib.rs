@@ -5,10 +5,12 @@ mod error;
 mod instructions;
 mod state;
 
-pub use error::{CounterError, CounterResult};
-pub use instructions::{CreateCounterV1, InstructionDiscriminator};
 use pinocchio::pubkey::{find_program_address, Pubkey};
-pub use state::{AccountDiscriminator, CounterV1};
+pub use {
+    error::{CounterError, CounterResult},
+    instructions::{DeactivateCounterV1, InitializeCounterV1, InstructionDiscriminator},
+    state::{AccountDiscriminator, CounterV1, DEACTIVATED_ACCOUNT_SIZE},
+};
 
 pub const COUNTER_SEED: &[u8] = b"counter";
 

@@ -3,8 +3,9 @@ use crate::{CounterError, CounterResult};
 #[repr(u8)]
 #[derive(Debug, PartialEq)]
 pub enum InstructionDiscriminator {
-    CreateCounterV1 = 1,
-    DeleteCounterV1 = 2,
+    InitializeCounterV1 = 1,
+    DeactivateCounterV1 = 2,
+
     DecrementCountV1 = 3,
     IncrementCountV1 = 4,
     SetCountV1 = 5,
@@ -33,8 +34,8 @@ impl TryFrom<&u8> for InstructionDiscriminator {
 
     fn try_from(byte: &u8) -> Result<Self, Self::Error> {
         match *byte {
-            1 => Ok(InstructionDiscriminator::CreateCounterV1),
-            2 => Ok(InstructionDiscriminator::DeleteCounterV1),
+            1 => Ok(InstructionDiscriminator::InitializeCounterV1),
+            2 => Ok(InstructionDiscriminator::DeactivateCounterV1),
             3 => Ok(InstructionDiscriminator::DecrementCountV1),
             4 => Ok(InstructionDiscriminator::IncrementCountV1),
             5 => Ok(InstructionDiscriminator::SetCountV1),
@@ -46,8 +47,8 @@ impl TryFrom<&u8> for InstructionDiscriminator {
 impl From<InstructionDiscriminator> for u8 {
     fn from(discriminator: InstructionDiscriminator) -> Self {
         match discriminator {
-            InstructionDiscriminator::CreateCounterV1 => 1,
-            InstructionDiscriminator::DeleteCounterV1 => 2,
+            InstructionDiscriminator::InitializeCounterV1 => 1,
+            InstructionDiscriminator::DeactivateCounterV1 => 2,
             InstructionDiscriminator::DecrementCountV1 => 3,
             InstructionDiscriminator::IncrementCountV1 => 4,
             InstructionDiscriminator::SetCountV1 => 5,
@@ -57,24 +58,23 @@ impl From<InstructionDiscriminator> for u8 {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::CounterError;
+    use {super::*, crate::CounterError};
 
     #[test]
-    fn test_parse_create_counter_v1() {
+    fn test_parse_initialize_counter_v1() {
         let instruction_data = [1u8, 0x42, 0x43];
 
         let (discriminator, args) = InstructionDiscriminator::parse(&instruction_data).unwrap();
 
-        assert_eq!(discriminator, InstructionDiscriminator::CreateCounterV1);
+        assert_eq!(discriminator, InstructionDiscriminator::InitializeCounterV1);
         assert_eq!(args, &[0x42, 0x43]);
     }
 
     #[test]
     fn test_parse_all_valid_discriminators() {
         let test_cases = [
-            (1u8, InstructionDiscriminator::CreateCounterV1),
-            (2u8, InstructionDiscriminator::DeleteCounterV1),
+            (1u8, InstructionDiscriminator::InitializeCounterV1),
+            (2u8, InstructionDiscriminator::DeactivateCounterV1),
             (3u8, InstructionDiscriminator::DecrementCountV1),
             (4u8, InstructionDiscriminator::IncrementCountV1),
             (5u8, InstructionDiscriminator::SetCountV1),
@@ -122,7 +122,7 @@ mod tests {
         let instruction_data = [1u8];
         let (discriminator, args) = InstructionDiscriminator::parse(&instruction_data).unwrap();
 
-        assert_eq!(discriminator, InstructionDiscriminator::CreateCounterV1);
+        assert_eq!(discriminator, InstructionDiscriminator::InitializeCounterV1);
         assert_eq!(args, &[]);
     }
 }

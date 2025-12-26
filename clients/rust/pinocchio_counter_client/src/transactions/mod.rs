@@ -1,3 +1,7 @@
-mod create_counter_v1_tx;
+mod deactivate_counter_v1_tx;
+mod initialize_counter_v1_tx;
 
-pub use create_counter_v1_tx::{CreateCounterV1SimpleTx, CreateCounterV1SimpleTxError};
+pub use {
+    deactivate_counter_v1_tx::{DeactivateCounterV1SimpleTx, DeactivateCounterV1SimpleTxError},
+    initialize_counter_v1_tx::{InitializeCounterV1SimpleTx, InitializeCounterV1SimpleTxError},
+};

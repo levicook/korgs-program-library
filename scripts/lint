@@ -3,7 +3,7 @@ set -euo pipefail
 
 source $(dirname $0)/env.sh
 
-cargo-fmt --check
-cargo-clippy --check -- --deny clippy::pedantic
+RUSTUP_TOOLCHAIN=nightly cargo fmt --check
+cargo clippy -- --deny clippy::pedantic
 
 echo "> Linting complete!"

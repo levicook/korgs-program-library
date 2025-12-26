@@ -15,6 +15,6 @@ echo "> Unit testing pinocchio_counter_client..."
 cargo test -p pinocchio_counter_client
 
 echo "> Integration testing pinocchio_counter..."
-cargo test -p integration-tests pinocchio_counter_tests
+cargo test -p integration-tests pinocchio_counter
 
 echo "> Test complete!"

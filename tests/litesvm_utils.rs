@@ -1,6 +1,4 @@
-use std::fmt::Write;
-
-use litesvm::types::TransactionResult;
+use {litesvm::types::TransactionResult, std::fmt::Write};
 
 pub fn demand_tx_success(tx_result: &TransactionResult) {
     if tx_result.is_ok() {

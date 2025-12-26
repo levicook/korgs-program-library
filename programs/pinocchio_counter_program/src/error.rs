@@ -1,16 +1,21 @@
-use std::fmt::{Display, Formatter};
-
-use pinocchio::program_error::{ProgramError, ToStr};
+use {
+    pinocchio::program_error::{ProgramError, ToStr},
+    std::fmt::{Display, Formatter},
+};
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum CounterError {
     CounterAddressMismatch,
     CounterMustBeEmpty,
+    CounterMustBeOwnedByProgram,
     CounterMustBeOwnedBySystemProgram,
     CounterMustBeWriteable,
     CounterMustHaveZeroLamports,
     InvalidInstructionDiscriminator(u8),
     NotEnoughAccounts { expected: usize, observed: usize },
+    OwnerMismatch,
+    OwnerMustBeSigner,
+    OwnerMustBeWritable,
     PayerMustBeSigner,
     SerializeError,
     SerializedSizeMismatch { expected: usize, observed: usize },
@@ -25,11 +30,15 @@ impl CounterError {
         match self {
             Self::CounterAddressMismatch => "Counter address must match",
             Self::CounterMustBeEmpty => "Counter must be empty",
+            Self::CounterMustBeOwnedByProgram => "Counter must be owned by program",
             Self::CounterMustBeOwnedBySystemProgram => "Counter must be owned by system program",
             Self::CounterMustBeWriteable => "Counter must be writable",
             Self::CounterMustHaveZeroLamports => "Counter must have zero lamports",
             Self::InvalidInstructionDiscriminator(_) => "Invalid instruction discriminator",
             Self::NotEnoughAccounts { .. } => "Not enough accounts",
+            Self::OwnerMismatch => "Owner mismatch",
+            Self::OwnerMustBeSigner => "Owner must be a signer",
+            Self::OwnerMustBeWritable => "Owner must be writable",
             Self::PayerMustBeSigner => "Payer must be a signer",
             Self::SerializeError => "Serialization error",
             Self::SerializedSizeMismatch { .. } => "Serialized size mismatch",
@@ -52,6 +61,10 @@ impl From<CounterError> for ProgramError {
             CounterError::SerializeError => 0x9,
             CounterError::SerializedSizeMismatch { .. } => 0xa,
             CounterError::SystemProgramAddressMismatch => 0xb,
+            CounterError::CounterMustBeOwnedByProgram => 0xc,
+            CounterError::OwnerMismatch => 0xd,
+            CounterError::OwnerMustBeSigner => 0xe,
+            CounterError::OwnerMustBeWritable => 0xf,
         };
 
         ProgramError::Custom(code)

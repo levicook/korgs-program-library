@@ -3,7 +3,7 @@ set -euo pipefail
 
 source $(dirname $0)/env.sh
 
-cargo-fmt
-cargo-clippy --fix -- --deny clippy::pedantic
+RUSTUP_TOOLCHAIN=nightly cargo fmt
+cargo clippy --fix --allow-dirty -- --deny clippy::pedantic
 
 echo "> Polishing complete!"

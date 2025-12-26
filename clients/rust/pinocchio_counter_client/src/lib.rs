@@ -1,5 +1,4 @@
-use pinocchio_counter_program::COUNTER_SEED;
-use solana_pubkey::Pubkey;
+use {pinocchio_counter_program::COUNTER_SEED, solana_pubkey::Pubkey};
 
 pub mod instructions;
 pub mod transactions;

@@ -1,10 +1,15 @@
-use pinocchio::pubkey::Pubkey;
-use wincode::{SchemaRead, SchemaWrite};
+use {
+    pinocchio::pubkey::Pubkey,
+    wincode::{SchemaRead, SchemaWrite},
+};
+
+pub const DEACTIVATED_ACCOUNT_SIZE: usize = 1;
 
 #[repr(u8)]
 #[derive(Debug, PartialEq, SchemaRead, SchemaWrite)]
 pub enum AccountDiscriminator {
     CounterV1 = 1,
+    DeactivatedAccount = 255,
 }
 
 #[repr(C)]

@@ -1,26 +1,27 @@
-use pinocchio::{
-    account_info::AccountInfo, instruction::Signer, pubkey::Pubkey, seeds, ProgramResult,
+use {
+    crate::{find_counter_address, CounterError, CounterV1, COUNTER_SEED},
+    pinocchio::{
+        account_info::AccountInfo, instruction::Signer, pubkey::Pubkey, seeds, ProgramResult,
+    },
+    pinocchio_system::create_account_with_minimum_balance_signed,
 };
-use pinocchio_system::create_account_with_minimum_balance_signed;
 
-use crate::{find_counter_address, CounterError, CounterV1, COUNTER_SEED};
-
-pub struct CreateCounterV1<'a> {
+pub struct InitializeCounterV1<'a> {
     pub program_id: &'a Pubkey,
-    pub accounts: CreateCounterV1Accounts<'a>,
+    pub accounts: InitializeCounterV1Accounts<'a>,
 }
 
-pub struct CreateCounterV1Accounts<'a> {
+pub struct InitializeCounterV1Accounts<'a> {
     pub payer: &'a AccountInfo,
     pub counter: &'a AccountInfo,
     pub counter_bump: u8,
     pub system_program: &'a AccountInfo,
 }
 
-impl CreateCounterV1<'_> {
-    /// Executes the create counter instruction.
+impl InitializeCounterV1<'_> {
+    /// Executes the initialize counter instruction.
     ///
-    /// Creates a new counter account owned by the program with the payer as the owner.
+    /// Initializes a new counter account owned by the program with the payer as the owner.
     ///
     /// # Errors
     ///
@@ -72,13 +73,13 @@ impl CreateCounterV1<'_> {
     }
 }
 
-impl<'a> TryFrom<(&'a Pubkey, &'a [AccountInfo], &[u8])> for CreateCounterV1<'a> {
+impl<'a> TryFrom<(&'a Pubkey, &'a [AccountInfo], &[u8])> for InitializeCounterV1<'a> {
     type Error = CounterError;
 
     fn try_from(
         (program_id, accounts, _args): (&'a Pubkey, &'a [AccountInfo], &[u8]),
     ) -> Result<Self, Self::Error> {
-        let accounts = CreateCounterV1Accounts::try_from((program_id, accounts))?;
+        let accounts = InitializeCounterV1Accounts::try_from((program_id, accounts))?;
         Ok(Self {
             program_id,
             accounts,
@@ -86,7 +87,7 @@ impl<'a> TryFrom<(&'a Pubkey, &'a [AccountInfo], &[u8])> for CreateCounterV1<'a>
     }
 }
 
-impl<'a> TryFrom<(&Pubkey, &'a [AccountInfo])> for CreateCounterV1Accounts<'a> {
+impl<'a> TryFrom<(&Pubkey, &'a [AccountInfo])> for InitializeCounterV1Accounts<'a> {
     type Error = CounterError;
 
     fn try_from((program_id, accounts): (&Pubkey, &'a [AccountInfo])) -> Result<Self, Self::Error> {

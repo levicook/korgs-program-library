@@ -8,7 +8,10 @@ mod state;
 use pinocchio::pubkey::{find_program_address, Pubkey};
 pub use {
     error::{CounterError, CounterResult},
-    instructions::{DeactivateCounterV1, InitializeCounterV1, InstructionDiscriminator},
+    instructions::{
+        DeactivateCounterV1, DecrementCountV1, IncrementCountV1, InitializeCounterV1,
+        InstructionDiscriminator, SetCountV1, SetCountV1Args,
+    },
     state::{AccountDiscriminator, CounterV1, DEACTIVATED_ACCOUNT_SIZE},
 };
 

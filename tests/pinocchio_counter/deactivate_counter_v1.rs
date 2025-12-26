@@ -44,7 +44,7 @@ fn succeeds() -> TestResult {
         .ok_or("Owner account should exist")?;
     let owner_lamports_before = owner_account_before.lamports;
 
-    ctx.advance_slot(1);
+    ctx.advance_slot(1)?;
 
     // Now deactivate the counter
     let deactivate_v1_tx =
@@ -90,9 +90,7 @@ fn succeeds() -> TestResult {
     // Owner should receive the counter's lamports minus rent-exempt minimum (minus transaction fees)
     assert!(
         lamports_received >= expected_lamports_received.saturating_sub(10_000), // Allow up to 10k for fees
-        "Owner should have received counter's lamports minus rent-exempt minimum. Received: {}, Expected: ~{}",
-        lamports_received,
-        expected_lamports_received
+        "Owner should have received counter's lamports minus rent-exempt minimum. Received: {lamports_received}, Expected: ~{expected_lamports_received}"
     );
 
     // Verify counter account has rent-exempt minimum for 1-byte account
@@ -122,14 +120,14 @@ fn fails_when_owner_not_signer() -> TestResult {
     let tx_result = ctx.send_transaction(init_counter_tx);
     demand_tx_success(&tx_result);
 
-    ctx.advance_slot(1);
+    ctx.advance_slot(1)?;
 
     let malicious_tx = MaliciousDeactivateCounterV1Tx::from_valid(
         ctx.program_id(),
         owner_kp,
         ctx.latest_blockhash(),
     )
-    .with_malicious_instruction(|ix| ix.with_owner_not_signer())
+    .with_malicious_instruction(super::malicious_builders::deactivate_counter_v1::MaliciousDeactivateCounterV1Ix::with_owner_not_signer)
     .with_different_signer(fee_payer_kp)
     .build();
 
@@ -154,14 +152,14 @@ fn fails_when_counter_not_writable() -> TestResult {
     let tx_result = ctx.send_transaction(init_counter_tx);
     demand_tx_success(&tx_result);
 
-    ctx.advance_slot(1);
+    ctx.advance_slot(1)?;
 
     let malicious_tx = MaliciousDeactivateCounterV1Tx::from_valid(
         ctx.program_id(),
         owner_kp,
         ctx.latest_blockhash(),
     )
-    .with_malicious_instruction(|ix| ix.with_counter_not_writable())
+    .with_malicious_instruction(super::malicious_builders::deactivate_counter_v1::MaliciousDeactivateCounterV1Ix::with_counter_not_writable)
     .build();
 
     let tx_result = ctx.send_transaction(malicious_tx);
@@ -185,14 +183,14 @@ fn fails_when_counter_address_mismatch() -> TestResult {
     let tx_result = ctx.send_transaction(init_counter_tx);
     demand_tx_success(&tx_result);
 
-    ctx.advance_slot(1);
+    ctx.advance_slot(1)?;
 
     let malicious_tx = MaliciousDeactivateCounterV1Tx::from_valid(
         ctx.program_id(),
         owner_kp,
         ctx.latest_blockhash(),
     )
-    .with_malicious_instruction(|ix| ix.with_random_counter_address())
+    .with_malicious_instruction(super::malicious_builders::deactivate_counter_v1::MaliciousDeactivateCounterV1Ix::with_random_counter_address)
     .build();
 
     let tx_result = ctx.send_transaction(malicious_tx);
@@ -218,7 +216,7 @@ fn fails_when_owner_mismatch() -> TestResult {
     let tx_result = ctx.send_transaction(init_counter_tx);
     demand_tx_success(&tx_result);
 
-    ctx.advance_slot(1);
+    ctx.advance_slot(1)?;
 
     // Try to deactivate with different owner
     // This will fail at address validation (0x1) because the counter address
@@ -261,7 +259,7 @@ fn fails_when_not_enough_accounts() -> TestResult {
     let tx_result = ctx.send_transaction(init_counter_tx);
     demand_tx_success(&tx_result);
 
-    ctx.advance_slot(1);
+    ctx.advance_slot(1)?;
 
     let (counter_pk, _) = find_counter_address(&ctx.program_id(), &owner_pk);
 
@@ -309,7 +307,7 @@ fn fails_with_invalid_instruction_discriminator() -> TestResult {
     let tx_result = ctx.send_transaction(init_counter_tx);
     demand_tx_success(&tx_result);
 
-    ctx.advance_slot(1);
+    ctx.advance_slot(1)?;
 
     let malicious_tx = MaliciousDeactivateCounterV1Tx::from_valid(
         ctx.program_id(),
@@ -340,14 +338,14 @@ fn fails_with_empty_instruction_data() -> TestResult {
     let tx_result = ctx.send_transaction(init_counter_tx);
     demand_tx_success(&tx_result);
 
-    ctx.advance_slot(1);
+    ctx.advance_slot(1)?;
 
     let malicious_tx = MaliciousDeactivateCounterV1Tx::from_valid(
         ctx.program_id(),
         owner_kp,
         ctx.latest_blockhash(),
     )
-    .with_malicious_instruction(|ix| ix.with_empty_data())
+    .with_malicious_instruction(super::malicious_builders::deactivate_counter_v1::MaliciousDeactivateCounterV1Ix::with_empty_data)
     .build();
 
     let tx_result = ctx.send_transaction(malicious_tx);

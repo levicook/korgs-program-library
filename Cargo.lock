@@ -961,6 +961,7 @@ dependencies = [
  "solana-rent",
  "solana-system-program",
  "solana-transaction",
+ "thiserror 2.0.17",
 ]
 
 [[package]]

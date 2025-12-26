@@ -41,7 +41,7 @@ impl CounterV1 {
     ///
     /// # Errors
     ///
-    /// Returns a [`wincode::WriteResult`] error if serialization fails.
+    /// Returns [`wincode::WriteResult`] if serialization fails.
     pub fn serialize(&self) -> wincode::WriteResult<Vec<u8>> {
         wincode::serialize(self)
     }
@@ -50,7 +50,7 @@ impl CounterV1 {
     ///
     /// # Errors
     ///
-    /// Returns a [`wincode::ReadError`] error if deserialization fails.
+    /// Returns [`wincode::ReadError`] if deserialization fails.
     pub fn deserialize(src: &[u8]) -> Result<Self, wincode::ReadError> {
         wincode::deserialize(src)
     }

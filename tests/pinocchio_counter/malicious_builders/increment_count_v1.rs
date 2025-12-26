@@ -1,5 +1,6 @@
 use {
-    pinocchio_counter_client::instructions::InitializeCounterV1Ix,
+    pinocchio_counter_client::instructions::IncrementCountV1Ix,
+    pinocchio_counter_program::InstructionDiscriminator,
     solana_hash::Hash,
     solana_instruction::{AccountMeta, Instruction},
     solana_keypair::{Keypair, Signer},
@@ -8,30 +9,28 @@ use {
     solana_transaction::{versioned::VersionedTransaction, VersionedMessage},
 };
 
-/// Builder for creating malicious `InitializeCounterV1` instructions.
+/// Builder for creating malicious `IncrementCountV1` instructions.
 ///
 /// This builder allows you to start from a valid instruction and mutate
 /// specific properties to test security boundaries.
 #[derive(Debug, Clone)]
-pub struct MaliciousInitializeCounterV1Ix {
+pub struct MaliciousIncrementCountV1Ix {
     program_id: Pubkey,
-    payer: AccountMeta,
+    owner: AccountMeta,
     counter: AccountMeta,
-    system_program: AccountMeta,
     instruction_data: Vec<u8>,
 }
 
-impl MaliciousInitializeCounterV1Ix {
+impl MaliciousIncrementCountV1Ix {
     /// Creates a new malicious instruction builder starting from a valid instruction.
     #[must_use]
-    pub fn from_valid(program_id: Pubkey, payer: Pubkey) -> Self {
-        let valid = InitializeCounterV1Ix::new(program_id, payer);
+    pub fn from_valid(program_id: Pubkey, owner: Pubkey) -> Self {
+        let valid = IncrementCountV1Ix::new(program_id, owner);
         Self {
             program_id,
-            payer: valid.payer,
+            owner: valid.owner,
             counter: valid.counter,
-            system_program: valid.system_program,
-            instruction_data: vec![1u8], // InitializeCounterV1 discriminator
+            instruction_data: vec![InstructionDiscriminator::IncrementCountV1.into()],
         }
     }
 
@@ -56,10 +55,17 @@ impl MaliciousInitializeCounterV1Ix {
         self
     }
 
-    /// Makes the payer not a signer.
+    /// Sets the counter address to a specific address.
     #[must_use]
-    pub fn with_payer_not_signer(mut self) -> Self {
-        self.payer.is_signer = false;
+    pub fn with_counter_address(mut self, address: Pubkey) -> Self {
+        self.counter.pubkey = address;
+        self
+    }
+
+    /// Makes the owner not a signer.
+    #[must_use]
+    pub fn with_owner_not_signer(mut self) -> Self {
+        self.owner.is_signer = false;
         self
     }
 
@@ -67,13 +73,6 @@ impl MaliciousInitializeCounterV1Ix {
     #[must_use]
     pub fn with_counter_not_writable(mut self) -> Self {
         self.counter.is_writable = false;
-        self
-    }
-
-    /// Sets the system program to a random address.
-    #[must_use]
-    pub fn with_random_system_program(mut self) -> Self {
-        self.system_program.pubkey = Pubkey::new_unique();
         self
     }
 
@@ -92,40 +91,40 @@ impl MaliciousInitializeCounterV1Ix {
     pub fn build(self) -> Instruction {
         Instruction {
             program_id: self.program_id,
-            accounts: vec![self.payer, self.counter, self.system_program],
+            accounts: vec![self.owner, self.counter],
             data: self.instruction_data,
         }
     }
 }
 
-/// Builder for creating malicious `InitializeCounterV1` transactions.
+/// Builder for creating malicious `IncrementCountV1` transactions.
 ///
 /// This builder allows you to create transactions with malicious instructions
 /// or transaction-level attacks.
 #[derive(Debug)]
-pub struct MaliciousInitializeCounterV1Tx {
+pub struct MaliciousIncrementCountV1Tx {
     program_id: Pubkey,
-    payer_kp: Keypair,
+    owner_kp: Keypair,
     recent_blockhash: Hash,
     instruction: Instruction,
-    signer_kp: Option<Keypair>, // If Some, use this keypair to sign instead of payer
+    signer_kp: Option<Keypair>, // If Some, use this keypair to sign instead of owner
 }
 
-impl MaliciousInitializeCounterV1Tx {
+impl MaliciousIncrementCountV1Tx {
     /// Creates a new malicious transaction builder starting from a valid transaction.
     ///
     /// # Panics
     ///
     /// Panics if building the instruction fails.
     #[must_use]
-    pub fn from_valid(program_id: Pubkey, payer_kp: Keypair, recent_blockhash: Hash) -> Self {
-        let valid_ix = InitializeCounterV1Ix::new(program_id, payer_kp.pubkey());
+    pub fn from_valid(program_id: Pubkey, owner_kp: Keypair, recent_blockhash: Hash) -> Self {
+        let valid_ix = IncrementCountV1Ix::new(program_id, owner_kp.pubkey());
         Self {
             program_id,
-            payer_kp,
+            owner_kp,
             recent_blockhash,
             instruction: valid_ix.to_instruction(false).unwrap(),
-            signer_kp: None, // Default: sign with payer
+            signer_kp: None, // Default: sign with owner
         }
     }
 
@@ -133,10 +132,10 @@ impl MaliciousInitializeCounterV1Tx {
     #[must_use]
     pub fn with_malicious_instruction<F>(mut self, f: F) -> Self
     where
-        F: FnOnce(MaliciousInitializeCounterV1Ix) -> MaliciousInitializeCounterV1Ix,
+        F: FnOnce(MaliciousIncrementCountV1Ix) -> MaliciousIncrementCountV1Ix,
     {
         let malicious_ix =
-            MaliciousInitializeCounterV1Ix::from_valid(self.program_id, self.payer_kp.pubkey());
+            MaliciousIncrementCountV1Ix::from_valid(self.program_id, self.owner_kp.pubkey());
         self.instruction = f(malicious_ix).build();
         self
     }
@@ -148,7 +147,7 @@ impl MaliciousInitializeCounterV1Tx {
         self
     }
 
-    /// Uses a different keypair to sign the transaction (so payer is not a signer).
+    /// Uses a different keypair to sign the transaction (so owner is not a signer).
     /// The `signer_kp` will be the fee payer and must have funds.
     #[must_use]
     pub fn with_different_signer(mut self, signer_kp: Keypair) -> Self {
@@ -163,8 +162,8 @@ impl MaliciousInitializeCounterV1Tx {
     /// Panics if message compilation or transaction creation fails.
     #[must_use]
     pub fn build(self) -> VersionedTransaction {
-        // Use signer_kp if provided, otherwise use payer_kp
-        let signer = self.signer_kp.as_ref().unwrap_or(&self.payer_kp);
+        // Use signer_kp if provided, otherwise use owner_kp
+        let signer = self.signer_kp.as_ref().unwrap_or(&self.owner_kp);
         let fee_payer_pk = signer.pubkey();
 
         let message = VersionedMessage::V0(
@@ -178,37 +177,5 @@ impl MaliciousInitializeCounterV1Tx {
         );
 
         VersionedTransaction::try_new(message, &[signer]).expect("Failed to create transaction")
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_malicious_ix_builder() {
-        let program_id = Pubkey::new_unique();
-        let payer = Pubkey::new_unique();
-
-        let malicious = MaliciousInitializeCounterV1Ix::from_valid(program_id, payer)
-            .with_payer_not_signer()
-            .build();
-
-        assert!(!malicious.accounts[0].is_signer);
-    }
-
-    #[test]
-    fn test_malicious_tx_builder() {
-        let program_id = Pubkey::new_unique();
-        let payer_kp = Keypair::new();
-        let blockhash = Hash::new_unique();
-
-        let malicious = MaliciousInitializeCounterV1Tx::from_valid(program_id, payer_kp, blockhash)
-            .with_malicious_instruction(
-                super::MaliciousInitializeCounterV1Ix::with_payer_not_signer,
-            )
-            .build();
-
-        assert!(!malicious.message.static_account_keys().is_empty());
     }
 }

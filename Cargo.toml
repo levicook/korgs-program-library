@@ -6,6 +6,10 @@ resolver = "2"
 version = "0.1.0"
 edition = "2021"
 
+[workspace.lints.clippy]
+pedantic = { level = "deny", priority = -1 }
+similar_names = "allow"
+
 [workspace.dependencies]
 pinocchio_counter_program = { path = "programs/pinocchio_counter_program" }
 pinocchio_counter_client = { path = "clients/rust/pinocchio_counter_client" }

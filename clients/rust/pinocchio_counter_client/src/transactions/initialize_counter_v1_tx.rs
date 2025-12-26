@@ -30,11 +30,8 @@ impl InitializeCounterV1SimpleTx {
     ///
     /// # Errors
     ///
-    /// Returns [`InitializeCounterV1SimpleTxError`] if:
-    /// - Instruction validation fails (see [`InitializeCounterV1IxError`])
-    /// - Message compilation fails
-    /// - Transaction signing fails
-    /// - Transaction sanitization fails
+    /// Returns [`InitializeCounterV1SimpleTxError`] if instruction validation, message compilation,
+    /// transaction signing, or transaction sanitization fails.
     pub fn try_new(
         program_id: Pubkey,
         payer_kp: Keypair,

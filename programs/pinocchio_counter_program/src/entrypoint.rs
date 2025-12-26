@@ -1,5 +1,8 @@
 use {
-    crate::{DeactivateCounterV1, InitializeCounterV1, InstructionDiscriminator},
+    crate::{
+        DeactivateCounterV1, DecrementCountV1, IncrementCountV1, InitializeCounterV1,
+        InstructionDiscriminator, SetCountV1,
+    },
     pinocchio::{account_info::AccountInfo, entrypoint, pubkey::Pubkey, ProgramResult},
 };
 
@@ -21,8 +24,16 @@ pub fn process_instruction(
             DeactivateCounterV1::try_from((program_id, accounts, args))?.execute()
         }
 
-        InstructionDiscriminator::DecrementCountV1 => todo!(),
-        InstructionDiscriminator::IncrementCountV1 => todo!(),
-        InstructionDiscriminator::SetCountV1 => todo!(),
+        InstructionDiscriminator::IncrementCountV1 => {
+            IncrementCountV1::try_from((program_id, accounts, args))?.execute()
+        }
+
+        InstructionDiscriminator::DecrementCountV1 => {
+            DecrementCountV1::try_from((program_id, accounts, args))?.execute()
+        }
+
+        InstructionDiscriminator::SetCountV1 => {
+            SetCountV1::try_from((program_id, accounts, args))?.execute()
+        }
     }
 }

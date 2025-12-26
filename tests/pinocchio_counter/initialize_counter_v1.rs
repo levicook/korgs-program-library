@@ -89,7 +89,7 @@ fn fails_when_payer_not_signer() -> TestResult {
         owner_kp,
         ctx.latest_blockhash(),
     )
-    .with_malicious_instruction(|ix| ix.with_payer_not_signer())
+    .with_malicious_instruction(super::malicious_builders::initialize_counter_v1::MaliciousInitializeCounterV1Ix::with_payer_not_signer)
     .with_different_signer(fee_payer_kp) // Sign with different keypair
     .build();
 
@@ -111,7 +111,7 @@ fn fails_when_counter_not_writable() -> TestResult {
         owner_kp,
         ctx.latest_blockhash(),
     )
-    .with_malicious_instruction(|ix| ix.with_counter_not_writable())
+    .with_malicious_instruction(super::malicious_builders::initialize_counter_v1::MaliciousInitializeCounterV1Ix::with_counter_not_writable)
     .build();
 
     let tx_result = ctx.send_transaction(malicious_tx);
@@ -131,7 +131,7 @@ fn fails_when_counter_address_mismatch() -> TestResult {
         owner_kp,
         ctx.latest_blockhash(),
     )
-    .with_malicious_instruction(|ix| ix.with_random_counter_address())
+    .with_malicious_instruction(super::malicious_builders::initialize_counter_v1::MaliciousInitializeCounterV1Ix::with_random_counter_address)
     .build();
 
     let tx_result = ctx.send_transaction(malicious_tx);
@@ -151,7 +151,7 @@ fn fails_when_system_program_address_mismatch() -> TestResult {
         owner_kp,
         ctx.latest_blockhash(),
     )
-    .with_malicious_instruction(|ix| ix.with_random_system_program())
+    .with_malicious_instruction(super::malicious_builders::initialize_counter_v1::MaliciousInitializeCounterV1Ix::with_random_system_program)
     .build();
 
     let tx_result = ctx.send_transaction(malicious_tx);
@@ -180,7 +180,7 @@ fn fails_when_counter_has_pre_existing_data() -> TestResult {
     let counter_account = ctx.get_account(counter_pk).ok_or("Counter should exist")?;
     assert!(!counter_account.data.is_empty(), "Counter should have data");
 
-    ctx.advance_slot(1);
+    ctx.advance_slot(1)?;
 
     let init_counter_tx2 =
         InitializeCounterV1SimpleTx::try_new(ctx.program_id(), owner_kp, ctx.latest_blockhash())?;
@@ -222,7 +222,7 @@ fn fails_with_empty_instruction_data() -> TestResult {
         owner_kp,
         ctx.latest_blockhash(),
     )
-    .with_malicious_instruction(|ix| ix.with_empty_data())
+    .with_malicious_instruction(super::malicious_builders::initialize_counter_v1::MaliciousInitializeCounterV1Ix::with_empty_data)
     .build();
 
     let tx_result = ctx.send_transaction(malicious_tx);

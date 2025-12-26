@@ -59,12 +59,7 @@ impl InitializeCounterV1Ix {
     ///
     /// # Errors
     ///
-    /// Returns [`InitializeCounterV1IxError`] if:
-    /// - Payer is not marked as a signer
-    /// - Payer is not marked as writable
-    /// - Counter address doesn't match the derived PDA address
-    /// - Counter is not marked as writable
-    /// - System program address is incorrect
+    /// Returns [`InitializeCounterV1IxError`] if validation fails.
     pub fn validate(&self) -> Result<(), InitializeCounterV1IxError> {
         if !self.payer.is_signer {
             return Err(InitializeCounterV1IxError::PayerMustBeSigner);
@@ -101,7 +96,6 @@ impl InitializeCounterV1Ix {
     /// # Errors
     ///
     /// Returns [`InitializeCounterV1IxError`] if `validate` is `true` and validation fails.
-    /// See [`validate`](Self::validate) for error conditions.
     pub fn to_instruction(self, validate: bool) -> Result<Instruction, InitializeCounterV1IxError> {
         if validate {
             self.validate()?;
@@ -181,7 +175,7 @@ mod tests {
         let err = init_ix.validate().unwrap_err();
         match err {
             InitializeCounterV1IxError::PayerMustBeSigner => {}
-            _ => panic!("Expected PayerMustBeSigner, got {:?}", err),
+            _ => panic!("Expected PayerMustBeSigner, got {err:?}"),
         }
         assert_eq!(err.to_string(), "Payer must be a signer");
     }
@@ -197,7 +191,7 @@ mod tests {
         let err = init_ix.validate().unwrap_err();
         match err {
             InitializeCounterV1IxError::PayerMustBeWritable => {}
-            _ => panic!("Expected PayerMustBeWritable, got {:?}", err),
+            _ => panic!("Expected PayerMustBeWritable, got {err:?}"),
         }
         assert_eq!(err.to_string(), "Payer must be writable");
     }
@@ -218,7 +212,7 @@ mod tests {
                 assert_eq!(expected, &expected_counter);
                 assert_eq!(observed, &wrong_counter);
             }
-            _ => panic!("Expected CounterAddressMismatch, got {:?}", err),
+            _ => panic!("Expected CounterAddressMismatch, got {err:?}"),
         }
         assert!(
             err.to_string().contains("Counter address mismatch"),
@@ -250,7 +244,7 @@ mod tests {
         let err = init_ix.validate().unwrap_err();
         match err {
             InitializeCounterV1IxError::CounterMustBeWritable => {}
-            _ => panic!("Expected CounterMustBeWritable, got {:?}", err),
+            _ => panic!("Expected CounterMustBeWritable, got {err:?}"),
         }
         assert_eq!(err.to_string(), "Counter must be writable");
     }
@@ -271,7 +265,7 @@ mod tests {
                 assert_eq!(expected, &expected_system_program);
                 assert_eq!(observed, &wrong_system_program);
             }
-            _ => panic!("Expected SystemProgramAddressMismatch, got {:?}", err),
+            _ => panic!("Expected SystemProgramAddressMismatch, got {err:?}"),
         }
         assert!(
             err.to_string().contains("System program address mismatch"),
@@ -374,7 +368,7 @@ mod tests {
         let err = Instruction::try_from(init_ix).unwrap_err();
         match err {
             InitializeCounterV1IxError::PayerMustBeSigner => {}
-            _ => panic!("Expected PayerMustBeSigner, got {:?}", err),
+            _ => panic!("Expected PayerMustBeSigner, got {err:?}"),
         }
     }
 }

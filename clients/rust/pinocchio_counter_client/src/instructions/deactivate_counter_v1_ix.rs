@@ -59,12 +59,7 @@ impl DeactivateCounterV1Ix {
     ///
     /// # Errors
     ///
-    /// Returns [`DeactivateCounterV1IxError`] if:
-    /// - Owner is not marked as a signer
-    /// - Owner is not marked as writable
-    /// - Counter address doesn't match the derived PDA address
-    /// - Counter is not marked as writable
-    /// - System program address is incorrect
+    /// Returns [`DeactivateCounterV1IxError`] if validation fails.
     pub fn validate(&self) -> Result<(), DeactivateCounterV1IxError> {
         if !self.owner.is_signer {
             return Err(DeactivateCounterV1IxError::OwnerMustBeSigner);
@@ -101,7 +96,6 @@ impl DeactivateCounterV1Ix {
     /// # Errors
     ///
     /// Returns [`DeactivateCounterV1IxError`] if `validate` is `true` and validation fails.
-    /// See [`validate`](Self::validate) for error conditions.
     pub fn to_instruction(self, validate: bool) -> Result<Instruction, DeactivateCounterV1IxError> {
         if validate {
             self.validate()?;
@@ -184,7 +178,7 @@ mod tests {
         let err = deactivate_ix.validate().unwrap_err();
         match err {
             DeactivateCounterV1IxError::OwnerMustBeSigner => {}
-            _ => panic!("Expected OwnerMustBeSigner, got {:?}", err),
+            _ => panic!("Expected OwnerMustBeSigner, got {err:?}"),
         }
         assert_eq!(err.to_string(), "Owner must be a signer");
     }
@@ -200,7 +194,7 @@ mod tests {
         let err = deactivate_ix.validate().unwrap_err();
         match err {
             DeactivateCounterV1IxError::OwnerMustBeWritable => {}
-            _ => panic!("Expected OwnerMustBeWritable, got {:?}", err),
+            _ => panic!("Expected OwnerMustBeWritable, got {err:?}"),
         }
         assert_eq!(err.to_string(), "Owner must be writable");
     }
@@ -221,7 +215,7 @@ mod tests {
                 assert_eq!(expected, &expected_counter);
                 assert_eq!(observed, &wrong_counter);
             }
-            _ => panic!("Expected CounterAddressMismatch, got {:?}", err),
+            _ => panic!("Expected CounterAddressMismatch, got {err:?}"),
         }
         assert!(
             err.to_string().contains("Counter address mismatch"),
@@ -241,7 +235,7 @@ mod tests {
         let err = deactivate_ix.validate().unwrap_err();
         match err {
             DeactivateCounterV1IxError::CounterMustBeWritable => {}
-            _ => panic!("Expected CounterMustBeWritable, got {:?}", err),
+            _ => panic!("Expected CounterMustBeWritable, got {err:?}"),
         }
         assert_eq!(err.to_string(), "Counter must be writable");
     }
@@ -262,7 +256,7 @@ mod tests {
                 assert_eq!(expected, &expected_system_program);
                 assert_eq!(observed, &wrong_system_program);
             }
-            _ => panic!("Expected SystemProgramAddressMismatch, got {:?}", err),
+            _ => panic!("Expected SystemProgramAddressMismatch, got {err:?}"),
         }
         assert!(
             err.to_string().contains("System program address mismatch"),
@@ -343,7 +337,7 @@ mod tests {
         let err = Instruction::try_from(deactivate_ix).unwrap_err();
         match err {
             DeactivateCounterV1IxError::OwnerMustBeSigner => {}
-            _ => panic!("Expected OwnerMustBeSigner, got {:?}", err),
+            _ => panic!("Expected OwnerMustBeSigner, got {err:?}"),
         }
     }
 }

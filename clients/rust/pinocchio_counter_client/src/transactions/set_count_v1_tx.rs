@@ -1,5 +1,5 @@
 use {
-    crate::instructions::{DeactivateCounterV1Ix, DeactivateCounterV1IxError},
+    crate::instructions::{SetCountV1Ix, SetCountV1IxError},
     solana_hash::Hash,
     solana_keypair::{Keypair, Signer},
     solana_message::{v0, CompileError},
@@ -9,12 +9,12 @@ use {
 };
 
 #[derive(Debug, thiserror::Error)]
-pub enum DeleteCounterV1SimpleTxError {
+pub enum SetCountV1SimpleTxError {
     #[error(transparent)]
     CompileError(#[from] CompileError),
 
     #[error(transparent)]
-    DeleteCounterIxError(#[from] DeactivateCounterV1IxError),
+    SetCountV1IxError(#[from] SetCountV1IxError),
 
     #[error(transparent)]
     SanitizeError(#[from] SanitizeError),
@@ -23,26 +23,31 @@ pub enum DeleteCounterV1SimpleTxError {
     SignerError(#[from] SignerError),
 }
 
-pub struct DeleteCounterV1SimpleTx(VersionedTransaction);
+pub struct SetCountV1SimpleTx(VersionedTransaction);
 
-impl DeleteCounterV1SimpleTx {
-    /// Creates a new versioned transaction for deleting a counter.
+impl SetCountV1SimpleTx {
+    /// Creates a new versioned transaction for setting a counter's count.
+    ///
+    /// # Arguments
+    ///
+    /// * `program_id` - The ID of the Pinocchio counter program.
+    /// * `owner_kp` - The keypair of the counter's owner.
+    /// * `count` - The count value to set.
+    /// * `recent_blockhash` - The recent blockhash for the transaction.
     ///
     /// # Errors
     ///
-    /// Returns [`DeleteCounterV1SimpleTxError`] if:
-    /// - Instruction validation fails (see [`DeleteCounterV1IxError`])
-    /// - Message compilation fails
-    /// - Transaction signing fails
-    /// - Transaction sanitization fails
+    /// Returns [`SetCountV1SimpleTxError`] if instruction validation, message compilation,
+    /// transaction signing, or transaction sanitization fails.
     pub fn try_new(
         program_id: Pubkey,
         owner_kp: Keypair,
+        count: u64,
         recent_blockhash: Hash,
-    ) -> Result<Self, DeleteCounterV1SimpleTxError> {
+    ) -> Result<Self, SetCountV1SimpleTxError> {
         let owner_pk = owner_kp.pubkey();
 
-        let ix = DeactivateCounterV1Ix::new(program_id, owner_pk).to_instruction(true)?;
+        let ix = SetCountV1Ix::new(program_id, owner_pk, count).to_instruction(true)?;
 
         let message = VersionedMessage::V0(v0::Message::try_compile(
             &owner_pk,
@@ -58,8 +63,8 @@ impl DeleteCounterV1SimpleTx {
     }
 }
 
-impl From<DeleteCounterV1SimpleTx> for VersionedTransaction {
-    fn from(value: DeleteCounterV1SimpleTx) -> Self {
+impl From<SetCountV1SimpleTx> for VersionedTransaction {
+    fn from(value: SetCountV1SimpleTx) -> Self {
         value.0
     }
 }

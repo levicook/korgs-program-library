@@ -18,9 +18,8 @@ impl InstructionDiscriminator {
     ///
     /// # Errors
     ///
-    /// Returns [`CounterError::InvalidInstructionDiscriminator`] if:
-    /// - The instruction data is empty
-    /// - The discriminator byte is not a valid instruction type
+    /// Returns [`CounterError::InvalidInstructionDiscriminator`] if the instruction data is empty
+    /// or the discriminator byte is not a valid instruction type.
     pub fn parse(instruction_data: &[u8]) -> CounterResult<(Self, &[u8])> {
         let (first, rest) = instruction_data
             .split_first()

@@ -1,5 +1,10 @@
 use {litesvm::types::TransactionResult, std::fmt::Write};
 
+/// Asserts that a transaction succeeded.
+///
+/// # Panics
+///
+/// Panics if the transaction failed, printing the transaction result and logs.
 pub fn demand_tx_success(tx_result: &TransactionResult) {
     if tx_result.is_ok() {
         return;
@@ -8,12 +13,23 @@ pub fn demand_tx_success(tx_result: &TransactionResult) {
     panic!("Transaction should have succeeded");
 }
 
+/// Asserts that a transaction failed.
+///
+/// # Panics
+///
+/// Panics if the transaction succeeded.
 pub fn demand_tx_failure(tx_result: &TransactionResult) {
     if let Ok(meta) = tx_result {
         panic!("Transaction should have failed, but succeeded: {meta:?}");
     }
 }
 
+/// Asserts that transaction logs contain the expected string.
+///
+/// # Panics
+///
+/// Panics if the expected string is not found in the transaction logs, printing
+/// the transaction result and logs.
 pub fn demand_logs_contain(expected: &str, tx_result: &TransactionResult) {
     let logs = extract_logs(tx_result);
 

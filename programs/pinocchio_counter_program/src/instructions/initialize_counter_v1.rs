@@ -25,11 +25,7 @@ impl InitializeCounterV1<'_> {
     ///
     /// # Errors
     ///
-    /// Returns a [`ProgramResult`] error if:
-    /// - Account creation fails (insufficient funds, account already exists, etc.)
-    /// - State serialization fails
-    /// - Serialized state size doesn't match expected size
-    /// - Data mutation fails
+    /// Returns a [`ProgramResult`] containing a [`CounterError`] if execution fails.
     pub fn execute(&self) -> ProgramResult {
         let owner = self.accounts.payer.key();
         let owner_ref = owner.as_ref();

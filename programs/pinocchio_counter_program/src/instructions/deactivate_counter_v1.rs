@@ -37,10 +37,7 @@ impl DeactivateCounterV1<'_> {
     ///
     /// # Errors
     ///
-    /// Returns a [`ProgramResult`] error if:
-    /// - Counter state deserialization fails
-    /// - Owner mismatch
-    /// - Account resize fails
+    /// Returns a [`ProgramResult`] containing a [`CounterError`] if execution fails.
     pub fn execute(&self) -> ProgramResult {
         let counter_state = {
             let counter_data = self.accounts.counter.try_borrow_data()?;

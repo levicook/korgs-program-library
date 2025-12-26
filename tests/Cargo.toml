@@ -20,3 +20,4 @@ solana-pubkey = { workspace = true }
 solana-rent = { workspace = true }
 solana-system-program = { workspace = true }
 solana-transaction = { workspace = true }
+thiserror = { workspace = true }

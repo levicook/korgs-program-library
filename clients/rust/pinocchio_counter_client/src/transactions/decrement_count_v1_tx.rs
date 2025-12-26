@@ -1,5 +1,5 @@
 use {
-    crate::instructions::{DeactivateCounterV1Ix, DeactivateCounterV1IxError},
+    crate::instructions::{DecrementCountV1Ix, DecrementCountV1IxError},
     solana_hash::Hash,
     solana_keypair::{Keypair, Signer},
     solana_message::{v0, CompileError},
@@ -9,12 +9,12 @@ use {
 };
 
 #[derive(Debug, thiserror::Error)]
-pub enum DeactivateCounterV1SimpleTxError {
+pub enum DecrementCountV1SimpleTxError {
     #[error(transparent)]
     CompileError(#[from] CompileError),
 
     #[error(transparent)]
-    DeactivateCounterV1IxError(#[from] DeactivateCounterV1IxError),
+    DecrementCountV1IxError(#[from] DecrementCountV1IxError),
 
     #[error(transparent)]
     SanitizeError(#[from] SanitizeError),
@@ -23,23 +23,23 @@ pub enum DeactivateCounterV1SimpleTxError {
     SignerError(#[from] SignerError),
 }
 
-pub struct DeactivateCounterV1SimpleTx(VersionedTransaction);
+pub struct DecrementCountV1SimpleTx(VersionedTransaction);
 
-impl DeactivateCounterV1SimpleTx {
-    /// Creates a new versioned transaction for deactivating a counter.
+impl DecrementCountV1SimpleTx {
+    /// Creates a new versioned transaction for decrementing a counter.
     ///
     /// # Errors
     ///
-    /// Returns [`DeactivateCounterV1SimpleTxError`] if instruction validation, message compilation,
+    /// Returns [`DecrementCountV1SimpleTxError`] if instruction validation, message compilation,
     /// transaction signing, or transaction sanitization fails.
     pub fn try_new(
         program_id: Pubkey,
         owner_kp: Keypair,
         recent_blockhash: Hash,
-    ) -> Result<Self, DeactivateCounterV1SimpleTxError> {
+    ) -> Result<Self, DecrementCountV1SimpleTxError> {
         let owner_pk = owner_kp.pubkey();
 
-        let ix = DeactivateCounterV1Ix::new(program_id, owner_pk).to_instruction(true)?;
+        let ix = DecrementCountV1Ix::new(program_id, owner_pk).to_instruction(true)?;
 
         let message = VersionedMessage::V0(v0::Message::try_compile(
             &owner_pk,
@@ -55,8 +55,8 @@ impl DeactivateCounterV1SimpleTx {
     }
 }
 
-impl From<DeactivateCounterV1SimpleTx> for VersionedTransaction {
-    fn from(value: DeactivateCounterV1SimpleTx) -> Self {
+impl From<DecrementCountV1SimpleTx> for VersionedTransaction {
+    fn from(value: DecrementCountV1SimpleTx) -> Self {
         value.0
     }
 }

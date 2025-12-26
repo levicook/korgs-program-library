@@ -36,19 +36,21 @@ impl CreateCounterV1SimpleTx {
     /// - Transaction sanitization fails
     pub fn try_new(
         program_id: Pubkey,
-        payer: Keypair,
+        payer_kp: Keypair,
         recent_blockhash: Hash,
     ) -> Result<Self, CreateCounterV1SimpleTxError> {
-        let ix = CreateCounterV1Ix::new(program_id, payer.pubkey()).to_instruction(true)?;
+        let payer_pk = payer_kp.pubkey();
+
+        let ix = CreateCounterV1Ix::new(program_id, payer_pk).to_instruction(true)?;
 
         let message = VersionedMessage::V0(v0::Message::try_compile(
-            &payer.pubkey(),
+            &payer_pk,
             &[ix],
             &[],
             recent_blockhash,
         )?);
 
-        let tx = VersionedTransaction::try_new(message, &[payer])?;
+        let tx = VersionedTransaction::try_new(message, &[payer_kp])?;
         tx.sanitize()?;
 
         Ok(Self(tx))

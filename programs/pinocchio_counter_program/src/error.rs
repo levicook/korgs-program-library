@@ -41,17 +41,17 @@ impl CounterError {
 impl From<CounterError> for ProgramError {
     fn from(e: CounterError) -> Self {
         let code = match e {
-            CounterError::CounterAddressMismatch => 1,
-            CounterError::CounterMustBeEmpty => 2,
-            CounterError::CounterMustBeOwnedBySystemProgram => 3,
-            CounterError::CounterMustBeWriteable => 4,
-            CounterError::CounterMustHaveZeroLamports => 5,
-            CounterError::InvalidInstructionDiscriminator(_) => 6,
-            CounterError::NotEnoughAccounts { .. } => 7,
-            CounterError::PayerMustBeSigner => 8,
-            CounterError::SerializeError => 9,
-            CounterError::SerializedSizeMismatch { .. } => 10,
-            CounterError::SystemProgramAddressMismatch => 11,
+            CounterError::CounterAddressMismatch => 0x1,
+            CounterError::CounterMustBeEmpty => 0x2,
+            CounterError::CounterMustBeOwnedBySystemProgram => 0x3,
+            CounterError::CounterMustBeWriteable => 0x4,
+            CounterError::CounterMustHaveZeroLamports => 0x5,
+            CounterError::InvalidInstructionDiscriminator(_) => 0x6,
+            CounterError::NotEnoughAccounts { .. } => 0x7,
+            CounterError::PayerMustBeSigner => 0x8,
+            CounterError::SerializeError => 0x9,
+            CounterError::SerializedSizeMismatch { .. } => 0xa,
+            CounterError::SystemProgramAddressMismatch => 0xb,
         };
 
         ProgramError::Custom(code)

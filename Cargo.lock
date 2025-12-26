@@ -952,10 +952,13 @@ dependencies = [
  "pinocchio_counter_client",
  "pinocchio_counter_program",
  "solana-account",
+ "solana-clock",
  "solana-hash 3.0.0",
  "solana-instruction",
  "solana-keypair",
+ "solana-message",
  "solana-pubkey 3.0.0",
+ "solana-system-program",
  "solana-transaction",
 ]
 

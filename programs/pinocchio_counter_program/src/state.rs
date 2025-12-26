@@ -40,6 +40,27 @@ impl CounterV1 {
     pub fn serialize(&self) -> wincode::WriteResult<Vec<u8>> {
         wincode::serialize(self)
     }
+
+    /// Deserializes the counter state from bytes.
+    ///
+    /// # Errors
+    ///
+    /// Returns a [`wincode::ReadError`] error if deserialization fails.
+    pub fn deserialize(src: &[u8]) -> Result<Self, wincode::ReadError> {
+        wincode::deserialize(src)
+    }
+}
+
+impl Default for CounterV1 {
+    fn default() -> Self {
+        Self {
+            discriminator: AccountDiscriminator::CounterV1,
+            owner: Pubkey::default(),
+            bump: 0,
+            count: 0,
+            reserved: [0; 31],
+        }
+    }
 }
 
 #[cfg(test)]

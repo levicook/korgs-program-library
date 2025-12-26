@@ -3,7 +3,7 @@ use pinocchio::{
 };
 use pinocchio_system::create_account_with_minimum_balance_signed;
 
-use crate::{find_counter_address, AccountDiscriminator, CounterError, CounterV1, COUNTER_SEED};
+use crate::{find_counter_address, CounterError, CounterV1, COUNTER_SEED};
 
 pub struct CreateCounterV1<'a> {
     pub program_id: &'a Pubkey,
@@ -46,11 +46,9 @@ impl CreateCounterV1<'_> {
         )?;
 
         let state = CounterV1 {
-            discriminator: AccountDiscriminator::CounterV1,
             owner: *owner,
             bump: self.accounts.counter_bump,
-            count: 0,
-            reserved: [0; 31],
+            ..Default::default()
         };
 
         let serialized = state

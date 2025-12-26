@@ -951,6 +951,7 @@ dependencies = [
  "litesvm",
  "pinocchio_counter_client",
  "pinocchio_counter_program",
+ "solana-account",
  "solana-hash 3.0.0",
  "solana-instruction",
  "solana-keypair",

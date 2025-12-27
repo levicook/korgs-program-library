@@ -1,7 +1,7 @@
 use {
     crate::{
-        find_counter_address, AccountDiscriminator, CounterError, CounterV1,
-        DEACTIVATED_ACCOUNT_SIZE,
+        find_counter_address, AccountDiscriminator, AccountDiscriminatorError, CounterError,
+        CounterV1, DEACTIVATED_ACCOUNT_SIZE,
     },
     pinocchio::{
         account_info::AccountInfo,
@@ -35,6 +35,7 @@ pub enum DeactivateCounterV1Error {
     DeserializeError,
     SerializeError,
     OwnerMismatch,
+    AccountDiscriminatorError(AccountDiscriminatorError),
 }
 
 impl DeactivateCounterV1<'_> {
@@ -58,10 +59,6 @@ impl DeactivateCounterV1<'_> {
             let counter_data = self.accounts.counter.try_borrow_data()?;
             CounterV1::deserialize(&counter_data)?
         };
-
-        if counter_state.discriminator != AccountDiscriminator::CounterV1Account {
-            return Err(DeactivateCounterV1Error::DeserializeError);
-        }
 
         if counter_state.owner != *self.accounts.owner.key() {
             return Err(DeactivateCounterV1Error::OwnerMismatch);
@@ -136,11 +133,20 @@ impl<'a> TryFrom<(&Pubkey, &'a [AccountInfo])> for DeactivateCounterV1Accounts<'
             return Err(DeactivateCounterV1Error::CounterMustBeOwnedByProgram);
         }
 
+        let counter_data = counter.try_borrow_data()?;
+        AccountDiscriminator::check(AccountDiscriminator::CounterV1Account, &counter_data)?;
+
         Ok(Self {
             owner,
             counter,
             counter_bump,
         })
+    }
+}
+
+impl From<AccountDiscriminatorError> for DeactivateCounterV1Error {
+    fn from(err: AccountDiscriminatorError) -> Self {
+        DeactivateCounterV1Error::AccountDiscriminatorError(err)
     }
 }
 

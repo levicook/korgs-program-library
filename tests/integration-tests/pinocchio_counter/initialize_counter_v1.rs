@@ -34,7 +34,13 @@ fn succeeds() -> TestResult {
         .ok_or("Counter account not found")?;
 
     assert_eq!(counter_account.data.len(), CounterV1::size());
-    assert_ne!(counter_account.lamports, 0);
+
+    assert_eq!(
+        counter_account.data[0],
+        u8::from(AccountDiscriminator::CounterV1Account)
+    );
+
+    assert_ne!(counter_account.lamports, 0, "Counter should have lamports");
 
     assert_eq!(
         counter_account.owner,

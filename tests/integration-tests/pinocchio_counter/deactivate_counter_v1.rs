@@ -22,13 +22,13 @@ fn succeeds() -> TestResult {
     let owner_kp = ctx.create_funded_keypair();
     let owner_pk = owner_kp.pubkey();
 
-    let init_counter_tx = InitializeCounterV1SimpleTx::try_new(
+    let initialize_tx = InitializeCounterV1SimpleTx::try_new(
         ctx.program_id(),
         owner_kp.insecure_clone(),
         ctx.latest_blockhash(),
     )?;
 
-    let tx_result = ctx.send_transaction(init_counter_tx);
+    let tx_result = ctx.send_transaction(initialize_tx);
     demand_tx_success(&tx_result);
 
     let (counter_pk, _) = find_counter_address(&ctx.program_id(), &owner_pk);
@@ -47,10 +47,10 @@ fn succeeds() -> TestResult {
     ctx.advance_slot(1)?;
 
     // Now deactivate the counter
-    let deactivate_v1_tx =
+    let deactivate_tx =
         DeactivateCounterV1SimpleTx::try_new(ctx.program_id(), owner_kp, ctx.latest_blockhash())?;
 
-    let tx_result = ctx.send_transaction(deactivate_v1_tx);
+    let tx_result = ctx.send_transaction(deactivate_tx);
     demand_tx_success(&tx_result);
 
     // Verify counter account is marked as deactivated (1 byte with DeactivatedAccount discriminator)
@@ -392,7 +392,7 @@ fn fails_when_counter_has_invalid_discriminator() -> TestResult {
     let tx_result = ctx.send_transaction(deactivate_tx);
 
     demand_tx_failure(&tx_result);
-    demand_logs_contain("failed: custom program error: 0x208", &tx_result);
+    demand_logs_contain("failed: custom program error: 0x20b", &tx_result);
 
     Ok(())
 }

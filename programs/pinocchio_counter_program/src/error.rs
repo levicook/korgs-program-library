@@ -78,6 +78,7 @@ impl From<CounterError> for ProgramError {
                         DeactivateCounterV1Error::DeserializeError => 0x08,
                         DeactivateCounterV1Error::SerializeError => 0x09,
                         DeactivateCounterV1Error::OwnerMismatch => 0x0a,
+                        DeactivateCounterV1Error::AccountDiscriminatorError(_) => 0x0b,
                         DeactivateCounterV1Error::ProgramError(_) => {
                             unreachable!(
                                 "ProgramError variant should be extracted before this point"
@@ -99,6 +100,7 @@ impl From<CounterError> for ProgramError {
                         IncrementCountV1Error::SerializeError => 0x08,
                         IncrementCountV1Error::OwnerMismatch => 0x09,
                         IncrementCountV1Error::SerializedSizeMismatch { .. } => 0x0a,
+                        IncrementCountV1Error::AccountDiscriminatorError(_) => 0x0b,
                         IncrementCountV1Error::ProgramError(_) => {
                             unreachable!(
                                 "ProgramError variant should be extracted before this point"
@@ -120,6 +122,7 @@ impl From<CounterError> for ProgramError {
                         DecrementCountV1Error::SerializeError => 0x08,
                         DecrementCountV1Error::OwnerMismatch => 0x09,
                         DecrementCountV1Error::SerializedSizeMismatch { .. } => 0x0a,
+                        DecrementCountV1Error::AccountDiscriminatorError(_) => 0x0b,
                         DecrementCountV1Error::ProgramError(_) => {
                             unreachable!(
                                 "ProgramError variant should be extracted before this point"
@@ -141,6 +144,7 @@ impl From<CounterError> for ProgramError {
                         SetCountV1Error::SerializeError => 0x08,
                         SetCountV1Error::OwnerMismatch => 0x09,
                         SetCountV1Error::SerializedSizeMismatch { .. } => 0x0a,
+                        SetCountV1Error::AccountDiscriminatorError(_) => 0x0b,
                         SetCountV1Error::ProgramError(_) => {
                             unreachable!(
                                 "ProgramError variant should be extracted before this point"

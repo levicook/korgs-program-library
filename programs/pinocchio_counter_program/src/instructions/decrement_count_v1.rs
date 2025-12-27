@@ -1,5 +1,8 @@
 use {
-    crate::{find_counter_address, AccountDiscriminator, CounterError, CounterV1},
+    crate::{
+        find_counter_address, AccountDiscriminator, AccountDiscriminatorError, CounterError,
+        CounterV1,
+    },
     pinocchio::{account_info::AccountInfo, program_error::ProgramError, pubkey::Pubkey},
     wincode::{ReadError, WriteError},
 };
@@ -26,6 +29,7 @@ pub enum DecrementCountV1Error {
     SerializeError,
     OwnerMismatch,
     SerializedSizeMismatch { expected: usize, observed: usize },
+    AccountDiscriminatorError(AccountDiscriminatorError),
 }
 
 impl DecrementCountV1<'_> {
@@ -42,10 +46,6 @@ impl DecrementCountV1<'_> {
             let counter_data = self.accounts.counter.try_borrow_data()?;
             CounterV1::deserialize(&counter_data)?
         };
-
-        if counter_state.discriminator != AccountDiscriminator::CounterV1Account {
-            return Err(DecrementCountV1Error::DeserializeError);
-        }
 
         if counter_state.owner != *self.accounts.owner.key() {
             return Err(DecrementCountV1Error::OwnerMismatch);
@@ -114,7 +114,16 @@ impl<'a> TryFrom<(&Pubkey, &'a [AccountInfo])> for DecrementCountV1Accounts<'a> 
             return Err(DecrementCountV1Error::CounterMustBeOwnedByProgram);
         }
 
+        let counter_data = counter.try_borrow_data()?;
+        AccountDiscriminator::check(AccountDiscriminator::CounterV1Account, &counter_data)?;
+
         Ok(Self { owner, counter })
+    }
+}
+
+impl From<AccountDiscriminatorError> for DecrementCountV1Error {
+    fn from(err: AccountDiscriminatorError) -> Self {
+        DecrementCountV1Error::AccountDiscriminatorError(err)
     }
 }
 

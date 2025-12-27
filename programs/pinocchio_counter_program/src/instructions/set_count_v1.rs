@@ -1,25 +1,11 @@
 use {
-    crate::{find_counter_address, AccountDiscriminator, CounterError, CounterV1},
+    crate::{
+        find_counter_address, AccountDiscriminator, AccountDiscriminatorError, CounterError,
+        CounterV1,
+    },
     pinocchio::{account_info::AccountInfo, program_error::ProgramError, pubkey::Pubkey},
     wincode::{ReadError, SchemaRead, SchemaWrite, WriteError},
 };
-
-#[repr(C)]
-#[derive(SchemaRead, SchemaWrite)]
-pub struct SetCountV1Args {
-    pub count: u64,
-}
-
-impl SetCountV1Args {
-    /// Deserializes the instruction arguments from bytes.
-    ///
-    /// # Errors
-    ///
-    /// Returns [`wincode::ReadError`] if deserialization fails.
-    pub fn deserialize(src: &[u8]) -> Result<Self, ReadError> {
-        wincode::deserialize(src)
-    }
-}
 
 pub struct SetCountV1<'a> {
     pub program_id: &'a Pubkey,
@@ -30,6 +16,12 @@ pub struct SetCountV1<'a> {
 pub struct SetCountV1Accounts<'a> {
     pub owner: &'a AccountInfo,
     pub counter: &'a AccountInfo,
+}
+
+#[repr(C)]
+#[derive(SchemaRead, SchemaWrite)]
+pub struct SetCountV1Args {
+    pub count: u64,
 }
 
 #[derive(Debug, PartialEq)]
@@ -44,6 +36,7 @@ pub enum SetCountV1Error {
     SerializeError,
     OwnerMismatch,
     SerializedSizeMismatch { expected: usize, observed: usize },
+    AccountDiscriminatorError(AccountDiscriminatorError),
 }
 
 impl SetCountV1<'_> {
@@ -59,10 +52,6 @@ impl SetCountV1<'_> {
             let counter_data = self.accounts.counter.try_borrow_data()?;
             CounterV1::deserialize(&counter_data)?
         };
-
-        if counter_state.discriminator != AccountDiscriminator::CounterV1Account {
-            return Err(SetCountV1Error::DeserializeError);
-        }
 
         if counter_state.owner != *self.accounts.owner.key() {
             return Err(SetCountV1Error::OwnerMismatch);
@@ -133,16 +122,27 @@ impl<'a> TryFrom<(&Pubkey, &'a [AccountInfo])> for SetCountV1Accounts<'a> {
             return Err(SetCountV1Error::CounterMustBeOwnedByProgram);
         }
 
+        let counter_data = counter.try_borrow_data()?;
+        AccountDiscriminator::check(AccountDiscriminator::CounterV1Account, &counter_data)?;
+
         Ok(Self { owner, counter })
     }
 }
 
-impl From<SetCountV1Error> for CounterError {
-    fn from(err: SetCountV1Error) -> Self {
-        match err {
-            SetCountV1Error::ProgramError(pe) => CounterError::ProgramError(pe),
-            _ => CounterError::SetCountV1(err),
-        }
+impl SetCountV1Args {
+    /// Deserializes the instruction arguments from bytes.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`wincode::ReadError`] if deserialization fails.
+    pub fn deserialize(src: &[u8]) -> Result<Self, ReadError> {
+        wincode::deserialize(src)
+    }
+}
+
+impl From<AccountDiscriminatorError> for SetCountV1Error {
+    fn from(err: AccountDiscriminatorError) -> Self {
+        SetCountV1Error::AccountDiscriminatorError(err)
     }
 }
 
@@ -161,5 +161,15 @@ impl From<ReadError> for SetCountV1Error {
 impl From<WriteError> for SetCountV1Error {
     fn from(_: WriteError) -> Self {
         Self::SerializeError
+    }
+}
+
+// TODO: place with CounterError enum
+impl From<SetCountV1Error> for CounterError {
+    fn from(err: SetCountV1Error) -> Self {
+        match err {
+            SetCountV1Error::ProgramError(pe) => CounterError::ProgramError(pe),
+            _ => CounterError::SetCountV1(err),
+        }
     }
 }

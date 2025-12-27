@@ -8,8 +8,21 @@ pub const DEACTIVATED_ACCOUNT_SIZE: usize = 1;
 #[repr(u8)]
 #[derive(Debug, PartialEq, SchemaRead, SchemaWrite)]
 pub enum AccountDiscriminator {
+    #[wincode(tag = 1)]
     CounterV1Account = 1,
+
+    #[wincode(tag = 255)]
     DeactivatedAccount = 255,
+}
+
+#[derive(Debug, PartialEq)]
+pub enum AccountDiscriminatorError {
+    Missing,
+    Mismatch {
+        expected: AccountDiscriminator,
+        observed: AccountDiscriminator,
+    },
+    Invalid(u8),
 }
 
 impl From<AccountDiscriminator> for u8 {
@@ -21,6 +34,42 @@ impl From<AccountDiscriminator> for u8 {
     }
 }
 
+impl TryFrom<u8> for AccountDiscriminator {
+    type Error = AccountDiscriminatorError;
+
+    fn try_from(byte: u8) -> Result<Self, Self::Error> {
+        match byte {
+            1 => Ok(AccountDiscriminator::CounterV1Account),
+            255 => Ok(AccountDiscriminator::DeactivatedAccount),
+            _ => Err(AccountDiscriminatorError::Invalid(byte)),
+        }
+    }
+}
+
+impl AccountDiscriminator {
+    /// Checks that account data has the expected discriminator.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`AccountDiscriminatorError`] if the discriminator is missing,
+    /// doesn't match the expected value, or is invalid.
+    pub fn check(
+        expected: AccountDiscriminator,
+        data: &[u8],
+    ) -> Result<(), AccountDiscriminatorError> {
+        let Some(discriminator_byte) = data.first() else {
+            return Err(AccountDiscriminatorError::Missing);
+        };
+
+        let observed = AccountDiscriminator::try_from(*discriminator_byte)?;
+        if observed != expected {
+            return Err(AccountDiscriminatorError::Mismatch { expected, observed });
+        }
+
+        Ok(())
+    }
+}
+
 #[repr(C)]
 #[derive(SchemaRead, SchemaWrite)]
 pub struct CounterV1 {
@@ -28,7 +77,7 @@ pub struct CounterV1 {
     pub owner: Pubkey,
     pub bump: u8,
     pub count: u64,
-    pub reserved: [u8; 31],
+    pub reserved: [u8; 31], // room for future fields
 }
 
 impl CounterV1 {
@@ -59,18 +108,6 @@ impl CounterV1 {
     /// Returns [`wincode::ReadError`] if deserialization fails.
     pub fn deserialize(src: &[u8]) -> Result<Self, wincode::ReadError> {
         wincode::deserialize(src)
-    }
-}
-
-impl Default for CounterV1 {
-    fn default() -> Self {
-        Self {
-            discriminator: AccountDiscriminator::CounterV1Account,
-            owner: Pubkey::default(),
-            bump: 0,
-            count: 0,
-            reserved: [0; 31],
-        }
     }
 }
 
@@ -107,5 +144,37 @@ mod tests {
         const CONST_SIZE: usize = CounterV1::size();
         assert_eq!(CONST_SIZE, CounterV1::size());
         const { assert!(CONST_SIZE > 0) }
+    }
+
+    #[test]
+    fn test_account_discriminator_serialization() -> wincode::Result<()> {
+        // Verify CounterV1Account serializes to 1
+        let counter_disc = AccountDiscriminator::CounterV1Account;
+        let serialized = wincode::serialize(&counter_disc)?;
+        assert_eq!(
+            serialized[0], 1,
+            "CounterV1Account should serialize to byte 1, got {}",
+            serialized[0]
+        );
+
+        // Verify DeactivatedAccount serializes to 255
+        let deactivated_disc = AccountDiscriminator::DeactivatedAccount;
+        let serialized = wincode::serialize(&deactivated_disc)?;
+        assert_eq!(
+            serialized[0], 255,
+            "DeactivatedAccount should serialize to byte 255, got {}",
+            serialized[0]
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_account_discriminator_uses_one_byte_of_memory() {
+        assert_eq!(
+            std::mem::size_of::<AccountDiscriminator>(),
+            1,
+            "AccountDiscriminator should be 1 byte with repr(u8)"
+        );
     }
 }

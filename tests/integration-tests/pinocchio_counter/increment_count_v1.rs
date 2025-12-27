@@ -339,7 +339,7 @@ fn fails_when_counter_has_invalid_discriminator() -> TestResult {
     let tx_result = ctx.send_transaction(increment_tx);
 
     demand_tx_failure(&tx_result);
-    demand_logs_contain("failed: custom program error: 0x307", &tx_result);
+    demand_logs_contain("failed: custom program error: 0x30b", &tx_result);
 
     Ok(())
 }
@@ -377,7 +377,7 @@ fn fails_when_counter_is_deactivated() -> TestResult {
     let tx_result = ctx.send_transaction(increment_tx);
 
     demand_tx_failure(&tx_result);
-    demand_logs_contain("failed: custom program error: 0x307", &tx_result);
+    demand_logs_contain("failed: custom program error: 0x30b", &tx_result);
 
     Ok(())
 }

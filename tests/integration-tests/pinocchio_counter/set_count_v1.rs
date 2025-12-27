@@ -361,7 +361,7 @@ fn fails_when_counter_has_invalid_discriminator() -> TestResult {
     let tx_result = ctx.send_transaction(set_count_tx);
 
     demand_tx_failure(&tx_result);
-    demand_logs_contain("failed: custom program error: 0x507", &tx_result);
+    demand_logs_contain("failed: custom program error: 0x50b", &tx_result);
 
     Ok(())
 }
@@ -399,7 +399,7 @@ fn fails_when_counter_is_deactivated() -> TestResult {
     let tx_result = ctx.send_transaction(set_count_tx);
 
     demand_tx_failure(&tx_result);
-    demand_logs_contain("failed: custom program error: 0x507", &tx_result);
+    demand_logs_contain("failed: custom program error: 0x50b", &tx_result);
 
     Ok(())
 }

@@ -1,5 +1,5 @@
 use {
-    crate::{find_counter_address, CounterError, CounterV1, COUNTER_SEED},
+    crate::{find_counter_address, AccountDiscriminator, CounterError, CounterV1, COUNTER_SEED},
     pinocchio::{
         account_info::AccountInfo, instruction::Signer, program_error::ProgramError,
         pubkey::Pubkey, seeds,
@@ -61,9 +61,11 @@ impl InitializeCounterV1<'_> {
         )?;
 
         let state = CounterV1 {
+            discriminator: AccountDiscriminator::CounterV1Account,
             owner: *owner,
             bump: self.accounts.counter_bump,
-            ..Default::default()
+            count: 0,
+            reserved: [0; 31],
         };
 
         let serialized = state.serialize()?;

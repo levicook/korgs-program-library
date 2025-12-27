@@ -69,11 +69,12 @@ impl From<CounterError> for ProgramError {
                     + match e {
                         DeactivateCounterV1Error::NotEnoughAccounts { .. } => 0x01,
                         DeactivateCounterV1Error::OwnerMustBeSigner => 0x02,
-                        DeactivateCounterV1Error::OwnerMustBeWritable => 0x03,
+                        DeactivateCounterV1Error::OwnerMustBeWriteable => 0x03,
                         DeactivateCounterV1Error::CounterMustBeWriteable => 0x04,
                         DeactivateCounterV1Error::CounterAddressMismatch => 0x05,
                         DeactivateCounterV1Error::CounterMustBeOwnedByProgram => 0x06,
-                        DeactivateCounterV1Error::SystemProgramAddressMismatch => 0x07,
+                        // SystemProgramAddressMismatch removed: system_program account is no longer required
+                        // Error code 0x07 reserved to maintain existing error code mappings
                         DeactivateCounterV1Error::DeserializeError => 0x08,
                         DeactivateCounterV1Error::SerializeError => 0x09,
                         DeactivateCounterV1Error::OwnerMismatch => 0x0a,
@@ -89,7 +90,8 @@ impl From<CounterError> for ProgramError {
                     + match e {
                         IncrementCountV1Error::NotEnoughAccounts { .. } => 0x01,
                         IncrementCountV1Error::OwnerMustBeSigner => 0x02,
-                        IncrementCountV1Error::OwnerMustBeWritable => 0x03,
+                        // OwnerMustBeWritable removed: owner account doesn't need to be writable
+                        // Error code 0x03 reserved to maintain existing error code mappings
                         IncrementCountV1Error::CounterMustBeWriteable => 0x04,
                         IncrementCountV1Error::CounterAddressMismatch => 0x05,
                         IncrementCountV1Error::CounterMustBeOwnedByProgram => 0x06,
@@ -109,7 +111,8 @@ impl From<CounterError> for ProgramError {
                     + match e {
                         DecrementCountV1Error::NotEnoughAccounts { .. } => 0x01,
                         DecrementCountV1Error::OwnerMustBeSigner => 0x02,
-                        DecrementCountV1Error::OwnerMustBeWritable => 0x03,
+                        // OwnerMustBeWritable removed: owner account doesn't need to be writable
+                        // Error code 0x03 reserved to maintain existing error code mappings
                         DecrementCountV1Error::CounterMustBeWriteable => 0x04,
                         DecrementCountV1Error::CounterAddressMismatch => 0x05,
                         DecrementCountV1Error::CounterMustBeOwnedByProgram => 0x06,
@@ -129,7 +132,8 @@ impl From<CounterError> for ProgramError {
                     + match e {
                         SetCountV1Error::NotEnoughAccounts { .. } => 0x01,
                         SetCountV1Error::OwnerMustBeSigner => 0x02,
-                        SetCountV1Error::OwnerMustBeWritable => 0x03,
+                        // OwnerMustBeWritable removed: owner account doesn't need to be writable
+                        // Error code 0x03 reserved to maintain existing error code mappings
                         SetCountV1Error::CounterMustBeWriteable => 0x04,
                         SetCountV1Error::CounterAddressMismatch => 0x05,
                         SetCountV1Error::CounterMustBeOwnedByProgram => 0x06,

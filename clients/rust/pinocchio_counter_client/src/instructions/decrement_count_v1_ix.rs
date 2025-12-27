@@ -11,10 +11,10 @@ pub enum DecrementCountV1IxError {
     OwnerMustBeSigner,
 
     #[error("Owner must be writable")]
-    OwnerMustBeWritable,
+    OwnerMustBeWriteable,
 
     #[error("Counter account must be writable")]
-    CounterMustBeWritable,
+    CounterMustBeWriteable,
 
     #[error("Counter address mismatch. Expected: {expected}, Observed: {observed}")]
     CounterAddressMismatch { expected: Pubkey, observed: Pubkey },
@@ -86,7 +86,7 @@ impl DecrementCountV1Ix {
         }
 
         if !self.owner.is_writable {
-            return Err(DecrementCountV1IxError::OwnerMustBeWritable);
+            return Err(DecrementCountV1IxError::OwnerMustBeWriteable);
         }
 
         let (expected_counter, _bump) = find_counter_address(&self.program_id, &self.owner.pubkey);
@@ -98,7 +98,7 @@ impl DecrementCountV1Ix {
         }
 
         if !self.counter.is_writable {
-            return Err(DecrementCountV1IxError::CounterMustBeWritable);
+            return Err(DecrementCountV1IxError::CounterMustBeWriteable);
         }
 
         Ok(())

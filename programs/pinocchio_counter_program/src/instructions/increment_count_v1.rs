@@ -12,7 +12,6 @@ pub struct IncrementCountV1<'a> {
 pub struct IncrementCountV1Accounts<'a> {
     pub owner: &'a AccountInfo,
     pub counter: &'a AccountInfo,
-    pub counter_bump: u8,
 }
 
 #[derive(Debug, PartialEq)]
@@ -20,7 +19,6 @@ pub enum IncrementCountV1Error {
     ProgramError(ProgramError),
     NotEnoughAccounts { expected: usize, observed: usize },
     OwnerMustBeSigner,
-    OwnerMustBeWritable,
     CounterMustBeWriteable,
     CounterAddressMismatch,
     CounterMustBeOwnedByProgram,
@@ -101,11 +99,7 @@ impl<'a> TryFrom<(&Pubkey, &'a [AccountInfo])> for IncrementCountV1Accounts<'a> 
             return Err(IncrementCountV1Error::OwnerMustBeSigner);
         }
 
-        if !owner.is_writable() {
-            return Err(IncrementCountV1Error::OwnerMustBeWritable);
-        }
-
-        let (counter_address, counter_bump) = find_counter_address(program_id, owner.key());
+        let (counter_address, _bump) = find_counter_address(program_id, owner.key());
 
         if !counter.is_writable() {
             return Err(IncrementCountV1Error::CounterMustBeWriteable);
@@ -119,11 +113,7 @@ impl<'a> TryFrom<(&Pubkey, &'a [AccountInfo])> for IncrementCountV1Accounts<'a> 
             return Err(IncrementCountV1Error::CounterMustBeOwnedByProgram);
         }
 
-        Ok(Self {
-            owner,
-            counter,
-            counter_bump,
-        })
+        Ok(Self { owner, counter })
     }
 }
 

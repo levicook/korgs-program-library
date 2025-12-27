@@ -21,7 +21,6 @@ pub struct DeactivateCounterV1Accounts<'a> {
     pub owner: &'a AccountInfo,
     pub counter: &'a AccountInfo,
     pub counter_bump: u8,
-    pub system_program: &'a AccountInfo,
 }
 
 #[derive(Debug, PartialEq)]
@@ -29,11 +28,10 @@ pub enum DeactivateCounterV1Error {
     ProgramError(ProgramError),
     NotEnoughAccounts { expected: usize, observed: usize },
     OwnerMustBeSigner,
-    OwnerMustBeWritable,
+    OwnerMustBeWriteable,
     CounterMustBeWriteable,
     CounterAddressMismatch,
     CounterMustBeOwnedByProgram,
-    SystemProgramAddressMismatch,
     DeserializeError,
     SerializeError,
     OwnerMismatch,
@@ -109,9 +107,9 @@ impl<'a> TryFrom<(&Pubkey, &'a [AccountInfo])> for DeactivateCounterV1Accounts<'
     type Error = DeactivateCounterV1Error;
 
     fn try_from((program_id, accounts): (&Pubkey, &'a [AccountInfo])) -> Result<Self, Self::Error> {
-        let [owner, counter, system_program] = accounts else {
+        let [owner, counter] = accounts else {
             return Err(DeactivateCounterV1Error::NotEnoughAccounts {
-                expected: 3,
+                expected: 2,
                 observed: accounts.len(),
             });
         };
@@ -121,7 +119,7 @@ impl<'a> TryFrom<(&Pubkey, &'a [AccountInfo])> for DeactivateCounterV1Accounts<'
         }
 
         if !owner.is_writable() {
-            return Err(DeactivateCounterV1Error::OwnerMustBeWritable);
+            return Err(DeactivateCounterV1Error::OwnerMustBeWriteable);
         }
 
         let (counter_address, counter_bump) = find_counter_address(program_id, owner.key());
@@ -138,15 +136,10 @@ impl<'a> TryFrom<(&Pubkey, &'a [AccountInfo])> for DeactivateCounterV1Accounts<'
             return Err(DeactivateCounterV1Error::CounterMustBeOwnedByProgram);
         }
 
-        if system_program.key() != &pinocchio_system::ID {
-            return Err(DeactivateCounterV1Error::SystemProgramAddressMismatch);
-        }
-
         Ok(Self {
             owner,
             counter,
             counter_bump,
-            system_program,
         })
     }
 }

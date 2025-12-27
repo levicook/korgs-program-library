@@ -12,10 +12,10 @@ pub enum SetCountV1IxError {
     OwnerMustBeSigner,
 
     #[error("Owner must be writable")]
-    OwnerMustBeWritable,
+    OwnerMustBeWriteable,
 
     #[error("Counter account must be writable")]
-    CounterMustBeWritable,
+    CounterMustBeWriteable,
 
     #[error("Counter address mismatch. Expected: {expected}, Observed: {observed}")]
     CounterAddressMismatch { expected: Pubkey, observed: Pubkey },
@@ -100,7 +100,7 @@ impl SetCountV1Ix {
         }
 
         if !self.owner.is_writable {
-            return Err(SetCountV1IxError::OwnerMustBeWritable);
+            return Err(SetCountV1IxError::OwnerMustBeWriteable);
         }
 
         let (expected_counter, _bump) = find_counter_address(&self.program_id, &self.owner.pubkey);
@@ -112,7 +112,7 @@ impl SetCountV1Ix {
         }
 
         if !self.counter.is_writable {
-            return Err(SetCountV1IxError::CounterMustBeWritable);
+            return Err(SetCountV1IxError::CounterMustBeWriteable);
         }
 
         Ok(())

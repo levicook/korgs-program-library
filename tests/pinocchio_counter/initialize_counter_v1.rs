@@ -6,7 +6,10 @@ use {
             TestContext, TestResult,
         },
     },
-    pinocchio_counter_client::{find_counter_address, transactions::InitializeCounterV1SimpleTx},
+    pinocchio_counter_client::{
+        find_counter_address,
+        transactions::{DeactivateCounterV1SimpleTx, InitializeCounterV1SimpleTx},
+    },
     pinocchio_counter_program::{AccountDiscriminator, CounterV1},
     solana_instruction::AccountMeta,
     solana_keypair::Signer,
@@ -188,6 +191,57 @@ fn fails_when_counter_has_pre_existing_data() -> TestResult {
     let tx_result2 = ctx.send_transaction(init_counter_tx2);
     demand_tx_failure(&tx_result2);
     demand_logs_contain("failed: custom program error: 0x105", &tx_result2);
+
+    Ok(())
+}
+
+#[test]
+fn fails_when_reinitializing_deactivated_counter() -> TestResult {
+    let mut ctx = TestContext::try_new()?;
+    let owner_kp = ctx.create_funded_keypair();
+    let owner_pk = owner_kp.pubkey();
+
+    // Initialize counter
+    let init_counter_tx = InitializeCounterV1SimpleTx::try_new(
+        ctx.program_id(),
+        owner_kp.insecure_clone(),
+        ctx.latest_blockhash(),
+    )?;
+
+    let tx_result = ctx.send_transaction(init_counter_tx);
+    demand_tx_success(&tx_result);
+
+    ctx.advance_slot(1)?;
+
+    // Deactivate the counter
+    let deactivate_tx = DeactivateCounterV1SimpleTx::try_new(
+        ctx.program_id(),
+        owner_kp.insecure_clone(),
+        ctx.latest_blockhash(),
+    )?;
+
+    let tx_result = ctx.send_transaction(deactivate_tx);
+    demand_tx_success(&tx_result);
+
+    let (counter_pk, _) = find_counter_address(&ctx.program_id(), &owner_pk);
+    let counter_account = ctx.get_account(counter_pk).ok_or("Counter should exist")?;
+    // Deactivated counter should have 1 byte (discriminator)
+    assert_eq!(
+        counter_account.data.len(),
+        1,
+        "Deactivated counter should be 1 byte"
+    );
+
+    ctx.advance_slot(1)?;
+
+    // Attempt to re-initialize the deactivated counter - should fail
+    let reinit_counter_tx =
+        InitializeCounterV1SimpleTx::try_new(ctx.program_id(), owner_kp, ctx.latest_blockhash())?;
+
+    let tx_result = ctx.send_transaction(reinit_counter_tx);
+    demand_tx_failure(&tx_result);
+    // Should fail because counter.data_is_empty() is false (has 1 byte discriminator)
+    demand_logs_contain("failed: custom program error: 0x105", &tx_result);
 
     Ok(())
 }

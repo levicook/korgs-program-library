@@ -11,10 +11,10 @@ pub enum InitializeCounterV1IxError {
     PayerMustBeSigner,
 
     #[error("Payer must be writable")]
-    PayerMustBeWritable,
+    PayerMustBeWriteable,
 
     #[error("Counter must be writable")]
-    CounterMustBeWritable,
+    CounterMustBeWriteable,
 
     #[error("Counter address mismatch: expected {expected:?}, observed {observed:?}")]
     CounterAddressMismatch { expected: Pubkey, observed: Pubkey },
@@ -66,7 +66,7 @@ impl InitializeCounterV1Ix {
         }
 
         if !self.payer.is_writable {
-            return Err(InitializeCounterV1IxError::PayerMustBeWritable);
+            return Err(InitializeCounterV1IxError::PayerMustBeWriteable);
         }
 
         let (expected_counter, _bump) = find_counter_address(&self.program_id, &self.payer.pubkey);
@@ -78,7 +78,7 @@ impl InitializeCounterV1Ix {
         }
 
         if !self.counter.is_writable {
-            return Err(InitializeCounterV1IxError::CounterMustBeWritable);
+            return Err(InitializeCounterV1IxError::CounterMustBeWriteable);
         }
 
         if self.system_program.pubkey != solana_system_program::id() {
@@ -190,8 +190,8 @@ mod tests {
 
         let err = init_ix.validate().unwrap_err();
         match err {
-            InitializeCounterV1IxError::PayerMustBeWritable => {}
-            _ => panic!("Expected PayerMustBeWritable, got {err:?}"),
+            InitializeCounterV1IxError::PayerMustBeWriteable => {}
+            _ => panic!("Expected PayerMustBeWriteable, got {err:?}"),
         }
         assert_eq!(err.to_string(), "Payer must be writable");
     }
@@ -243,8 +243,8 @@ mod tests {
 
         let err = init_ix.validate().unwrap_err();
         match err {
-            InitializeCounterV1IxError::CounterMustBeWritable => {}
-            _ => panic!("Expected CounterMustBeWritable, got {err:?}"),
+            InitializeCounterV1IxError::CounterMustBeWriteable => {}
+            _ => panic!("Expected CounterMustBeWriteable, got {err:?}"),
         }
         assert_eq!(err.to_string(), "Counter must be writable");
     }

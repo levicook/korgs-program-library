@@ -261,8 +261,6 @@ fn fails_when_not_enough_accounts() -> TestResult {
 
     ctx.advance_slot(1)?;
 
-    let (counter_pk, _) = find_counter_address(&ctx.program_id(), &owner_pk);
-
     let malicious_ix = MaliciousDeactivateCounterV1Ix::from_valid(ctx.program_id(), owner_pk);
     let instruction = malicious_ix.build_with_accounts(vec![
         AccountMeta {
@@ -270,12 +268,7 @@ fn fails_when_not_enough_accounts() -> TestResult {
             is_signer: true,
             is_writable: true,
         },
-        AccountMeta {
-            pubkey: counter_pk,
-            is_signer: false,
-            is_writable: true,
-        },
-        // Missing system_program - only 2 accounts instead of 3
+        // Missing counter - only 1 account instead of 2
     ]);
 
     let malicious_tx = MaliciousDeactivateCounterV1Tx::from_valid(

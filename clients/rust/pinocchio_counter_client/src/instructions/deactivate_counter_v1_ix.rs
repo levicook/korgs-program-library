@@ -11,23 +11,19 @@ pub enum DeactivateCounterV1IxError {
     OwnerMustBeSigner,
 
     #[error("Owner must be writable")]
-    OwnerMustBeWritable,
+    OwnerMustBeWriteable,
 
     #[error("Counter must be writable")]
-    CounterMustBeWritable,
+    CounterMustBeWriteable,
 
     #[error("Counter address mismatch: expected {expected:?}, observed {observed:?}")]
     CounterAddressMismatch { expected: Pubkey, observed: Pubkey },
-
-    #[error("System program address mismatch: expected {expected:?}, observed {observed:?}")]
-    SystemProgramAddressMismatch { expected: Pubkey, observed: Pubkey },
 }
 
 pub struct DeactivateCounterV1Ix {
     pub program_id: Pubkey,
     pub owner: AccountMeta,
     pub counter: AccountMeta,
-    pub system_program: AccountMeta,
 }
 
 impl DeactivateCounterV1Ix {
@@ -47,11 +43,6 @@ impl DeactivateCounterV1Ix {
                 is_signer: false,
                 is_writable: true,
             },
-            system_program: AccountMeta {
-                pubkey: solana_system_program::id(),
-                is_signer: false,
-                is_writable: false,
-            },
         }
     }
 
@@ -66,7 +57,7 @@ impl DeactivateCounterV1Ix {
         }
 
         if !self.owner.is_writable {
-            return Err(DeactivateCounterV1IxError::OwnerMustBeWritable);
+            return Err(DeactivateCounterV1IxError::OwnerMustBeWriteable);
         }
 
         let (expected_counter, _bump) = find_counter_address(&self.program_id, &self.owner.pubkey);
@@ -78,14 +69,7 @@ impl DeactivateCounterV1Ix {
         }
 
         if !self.counter.is_writable {
-            return Err(DeactivateCounterV1IxError::CounterMustBeWritable);
-        }
-
-        if self.system_program.pubkey != solana_system_program::id() {
-            return Err(DeactivateCounterV1IxError::SystemProgramAddressMismatch {
-                expected: solana_system_program::id(),
-                observed: self.system_program.pubkey,
-            });
+            return Err(DeactivateCounterV1IxError::CounterMustBeWriteable);
         }
 
         Ok(())
@@ -103,7 +87,7 @@ impl DeactivateCounterV1Ix {
 
         Ok(Instruction {
             program_id: self.program_id,
-            accounts: vec![self.owner, self.counter, self.system_program],
+            accounts: vec![self.owner, self.counter],
             data: vec![InstructionDiscriminator::DeactivateCounterV1.into()],
         })
     }
@@ -148,14 +132,6 @@ mod tests {
         // Counter should be writable but not signer
         assert!(!deactivate_ix.counter.is_signer);
         assert!(deactivate_ix.counter.is_writable);
-
-        // System program should be neither signer nor writable
-        assert!(!deactivate_ix.system_program.is_signer);
-        assert!(!deactivate_ix.system_program.is_writable);
-        assert_eq!(
-            deactivate_ix.system_program.pubkey,
-            solana_system_program::id()
-        );
     }
 
     #[test]
@@ -193,8 +169,8 @@ mod tests {
 
         let err = deactivate_ix.validate().unwrap_err();
         match err {
-            DeactivateCounterV1IxError::OwnerMustBeWritable => {}
-            _ => panic!("Expected OwnerMustBeWritable, got {err:?}"),
+            DeactivateCounterV1IxError::OwnerMustBeWriteable => {}
+            _ => panic!("Expected OwnerMustBeWriteable, got {err:?}"),
         }
         assert_eq!(err.to_string(), "Owner must be writable");
     }
@@ -234,35 +210,10 @@ mod tests {
 
         let err = deactivate_ix.validate().unwrap_err();
         match err {
-            DeactivateCounterV1IxError::CounterMustBeWritable => {}
-            _ => panic!("Expected CounterMustBeWritable, got {err:?}"),
+            DeactivateCounterV1IxError::CounterMustBeWriteable => {}
+            _ => panic!("Expected CounterMustBeWriteable, got {err:?}"),
         }
         assert_eq!(err.to_string(), "Counter must be writable");
-    }
-
-    #[test]
-    fn test_validate_fails_when_system_program_address_mismatch() {
-        let program_id = Pubkey::new_unique();
-        let owner = Pubkey::new_unique();
-        let expected_system_program = solana_system_program::id();
-
-        let mut deactivate_ix = DeactivateCounterV1Ix::new(program_id, owner);
-        let wrong_system_program = Pubkey::new_unique();
-        deactivate_ix.system_program.pubkey = wrong_system_program; // Wrong address
-
-        let err = deactivate_ix.validate().unwrap_err();
-        match &err {
-            DeactivateCounterV1IxError::SystemProgramAddressMismatch { expected, observed } => {
-                assert_eq!(expected, &expected_system_program);
-                assert_eq!(observed, &wrong_system_program);
-            }
-            _ => panic!("Expected SystemProgramAddressMismatch, got {err:?}"),
-        }
-        assert!(
-            err.to_string().contains("System program address mismatch"),
-            "System program address mismatch should be in the error message: {:?}",
-            err.to_string()
-        );
     }
 
     #[test]
@@ -275,10 +226,9 @@ mod tests {
         let instruction = deactivate_ix.to_instruction(true).unwrap();
 
         assert_eq!(instruction.program_id, program_id);
-        assert_eq!(instruction.accounts.len(), 3);
+        assert_eq!(instruction.accounts.len(), 2);
         assert_eq!(instruction.accounts[0].pubkey, owner);
         assert_eq!(instruction.accounts[1].pubkey, expected_counter);
-        assert_eq!(instruction.accounts[2].pubkey, solana_system_program::id());
         assert_eq!(
             instruction.data,
             vec![u8::from(InstructionDiscriminator::DeactivateCounterV1)]
@@ -319,7 +269,7 @@ mod tests {
         let instruction = Instruction::try_from(deactivate_ix).unwrap();
 
         assert_eq!(instruction.program_id, program_id);
-        assert_eq!(instruction.accounts.len(), 3);
+        assert_eq!(instruction.accounts.len(), 2);
         assert_eq!(
             instruction.data,
             vec![u8::from(InstructionDiscriminator::DeactivateCounterV1)]

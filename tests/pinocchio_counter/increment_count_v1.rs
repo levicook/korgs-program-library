@@ -10,6 +10,7 @@ use {
         find_counter_address,
         transactions::{
             DeactivateCounterV1SimpleTx, IncrementCountV1SimpleTx, InitializeCounterV1SimpleTx,
+            SetCountV1SimpleTx,
         },
     },
     pinocchio_counter_program::{AccountDiscriminator, CounterV1},
@@ -377,6 +378,66 @@ fn fails_when_counter_is_deactivated() -> TestResult {
 
     demand_tx_failure(&tx_result);
     demand_logs_contain("failed: custom program error: 0x307", &tx_result);
+
+    Ok(())
+}
+
+#[test]
+fn saturates_at_max_when_incrementing_from_max() -> TestResult {
+    let mut ctx = TestContext::try_new()?;
+    let owner_kp = ctx.create_funded_keypair();
+    let owner_pk = owner_kp.pubkey();
+
+    // Initialize counter
+    let init_counter_tx = InitializeCounterV1SimpleTx::try_new(
+        ctx.program_id(),
+        owner_kp.insecure_clone(),
+        ctx.latest_blockhash(),
+    )?;
+
+    let tx_result = ctx.send_transaction(init_counter_tx);
+    demand_tx_success(&tx_result);
+
+    ctx.advance_slot(1)?;
+
+    // Set counter to u64::MAX
+    let set_count_tx = SetCountV1SimpleTx::try_new(
+        ctx.program_id(),
+        owner_kp.insecure_clone(),
+        u64::MAX,
+        ctx.latest_blockhash(),
+    )?;
+
+    let tx_result = ctx.send_transaction(set_count_tx);
+    demand_tx_success(&tx_result);
+
+    let (counter_pk, _) = find_counter_address(&ctx.program_id(), &owner_pk);
+    let counter_account = ctx.get_account(counter_pk).ok_or("Counter should exist")?;
+    let counter_before = CounterV1::deserialize(&counter_account.data)?;
+    assert_eq!(
+        counter_before.count,
+        u64::MAX,
+        "Counter should be at u64::MAX"
+    );
+
+    ctx.advance_slot(1)?;
+
+    // Increment from u64::MAX - should saturate and remain at u64::MAX
+    let increment_tx =
+        IncrementCountV1SimpleTx::try_new(ctx.program_id(), owner_kp, ctx.latest_blockhash())?;
+
+    let tx_result = ctx.send_transaction(increment_tx);
+    demand_tx_success(&tx_result);
+
+    let counter_account_after = ctx
+        .get_account(counter_pk)
+        .ok_or("Counter should still exist")?;
+    let counter_after = CounterV1::deserialize(&counter_account_after.data)?;
+    assert_eq!(
+        counter_after.count,
+        u64::MAX,
+        "Incrementing from u64::MAX should saturate and remain at u64::MAX"
+    );
 
     Ok(())
 }

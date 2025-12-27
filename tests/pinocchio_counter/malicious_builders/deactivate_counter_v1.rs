@@ -18,7 +18,6 @@ pub struct MaliciousDeactivateCounterV1Ix {
     program_id: Pubkey,
     owner: AccountMeta,
     counter: AccountMeta,
-    system_program: AccountMeta,
     instruction_data: Vec<u8>,
 }
 
@@ -31,7 +30,6 @@ impl MaliciousDeactivateCounterV1Ix {
             program_id,
             owner: valid.owner,
             counter: valid.counter,
-            system_program: valid.system_program,
             instruction_data: vec![InstructionDiscriminator::DeactivateCounterV1.into()],
         }
     }
@@ -78,13 +76,6 @@ impl MaliciousDeactivateCounterV1Ix {
         self
     }
 
-    /// Sets the system program to a random address.
-    #[must_use]
-    pub fn with_random_system_program(mut self) -> Self {
-        self.system_program.pubkey = Pubkey::new_unique();
-        self
-    }
-
     /// Builds the malicious instruction with a custom account list.
     #[must_use]
     pub fn build_with_accounts(self, accounts: Vec<AccountMeta>) -> Instruction {
@@ -100,7 +91,7 @@ impl MaliciousDeactivateCounterV1Ix {
     pub fn build(self) -> Instruction {
         Instruction {
             program_id: self.program_id,
-            accounts: vec![self.owner, self.counter, self.system_program],
+            accounts: vec![self.owner, self.counter],
             data: self.instruction_data,
         }
     }

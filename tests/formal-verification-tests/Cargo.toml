@@ -8,3 +8,6 @@ build = "build.rs"
 path = "lib.rs"
 
 [dependencies]
+# DO NOT ADD kani here. The crate is a useless placeholder.
+pinocchio_counter_program = { workspace = true, features = ["no-entrypoint"] }
+pinocchio = { workspace = true }

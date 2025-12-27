@@ -94,14 +94,14 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Build program only if needed (integration/fuzz tests need the .so file)
-# Unit tests and formal verification (Kani) build their own artifacts
+# Build program only if needed (integration tests need the .so file)
+# Unit, formal verification and fuzz tests build their own artifacts currently.
 needs_build=false
 case "$TEST_TYPE" in
-    integration|fuzz|all|default)
+    integration|all|default)
         needs_build=true
         ;;
-    unit|formal)
+    unit|formal|fuzz)
         needs_build=false
         ;;
 esac

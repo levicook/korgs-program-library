@@ -1,8 +1,5 @@
 use {
-    crate::{
-        find_counter_address, AccountDiscriminator, AccountDiscriminatorError, CounterError,
-        CounterV1,
-    },
+    crate::{find_counter_address, AccountDiscriminator, AccountDiscriminatorError, CounterV1},
     pinocchio::{account_info::AccountInfo, program_error::ProgramError, pubkey::Pubkey},
     wincode::{ReadError, SchemaRead, SchemaWrite, WriteError},
 };
@@ -24,7 +21,7 @@ pub struct SetCountV1Args {
     pub count: u64,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 pub enum SetCountV1Error {
     ProgramError(ProgramError),
     NotEnoughAccounts { expected: usize, observed: usize },
@@ -32,8 +29,8 @@ pub enum SetCountV1Error {
     CounterMustBeWriteable,
     CounterAddressMismatch,
     CounterMustBeOwnedByProgram,
-    DeserializeError,
-    SerializeError,
+    DeserializeError(ReadError),
+    SerializeError(WriteError),
     OwnerMismatch,
     SerializedSizeMismatch { expected: usize, observed: usize },
     AccountDiscriminatorError(AccountDiscriminatorError),
@@ -153,23 +150,13 @@ impl From<ProgramError> for SetCountV1Error {
 }
 
 impl From<ReadError> for SetCountV1Error {
-    fn from(_: ReadError) -> Self {
-        Self::DeserializeError
+    fn from(err: ReadError) -> Self {
+        Self::DeserializeError(err)
     }
 }
 
 impl From<WriteError> for SetCountV1Error {
-    fn from(_: WriteError) -> Self {
-        Self::SerializeError
-    }
-}
-
-// TODO: place with CounterError enum
-impl From<SetCountV1Error> for CounterError {
-    fn from(err: SetCountV1Error) -> Self {
-        match err {
-            SetCountV1Error::ProgramError(pe) => CounterError::ProgramError(pe),
-            _ => CounterError::SetCountV1(err),
-        }
+    fn from(err: WriteError) -> Self {
+        Self::SerializeError(err)
     }
 }

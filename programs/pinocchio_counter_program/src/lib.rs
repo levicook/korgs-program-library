@@ -7,10 +7,10 @@ mod state;
 
 use pinocchio::pubkey::{try_find_program_address, Pubkey};
 pub use {
-    error::{CounterError, CounterResult},
+    error::{InstructionError, InstructionResult},
     instructions::{
         DeactivateCounterV1, DecrementCountV1, IncrementCountV1, InitializeCounterV1,
-        InstructionDiscriminator, SetCountV1, SetCountV1Args,
+        InstructionDiscriminator, InstructionDiscriminatorError, SetCountV1, SetCountV1Args,
     },
     state::{AccountDiscriminator, AccountDiscriminatorError, CounterV1, DEACTIVATED_ACCOUNT_SIZE},
 };

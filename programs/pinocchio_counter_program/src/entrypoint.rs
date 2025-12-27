@@ -1,7 +1,7 @@
 use {
     crate::{
-        CounterError, DeactivateCounterV1, DecrementCountV1, IncrementCountV1, InitializeCounterV1,
-        InstructionDiscriminator, SetCountV1,
+        DeactivateCounterV1, DecrementCountV1, IncrementCountV1, InitializeCounterV1,
+        InstructionDiscriminator, InstructionDiscriminatorError, InstructionError, SetCountV1,
     },
     pinocchio::{
         account_info::AccountInfo, entrypoint, program_error::ProgramError, pubkey::Pubkey,
@@ -16,7 +16,8 @@ pub fn process_instruction(
     accounts: &[AccountInfo],
     instruction_data: &[u8],
 ) -> ProgramResult {
-    let (discriminator, args) = InstructionDiscriminator::parse(instruction_data)?;
+    let (discriminator, args) = InstructionDiscriminator::parse(instruction_data)
+        .map_err(handle_instruction_discriminator_error)?;
 
     match discriminator {
         InstructionDiscriminator::InitializeCounterV1 => {
@@ -53,11 +54,15 @@ pub fn process_instruction(
     Ok(())
 }
 
-fn handle_instruction_error<E: std::fmt::Debug + Into<CounterError>>(err: E) -> ProgramError {
-    let counter_error: CounterError = err.into();
-
-    let error_msg = format!("Error: {}", counter_error);
+fn handle_instruction_discriminator_error(err: InstructionDiscriminatorError) -> ProgramError {
+    let error_msg = format!("Instruction Discriminator Error: {:?}", err);
     pinocchio::msg!(&error_msg);
+    err.into()
+}
 
-    counter_error.into()
+fn handle_instruction_error<E: std::fmt::Debug + Into<InstructionError>>(err: E) -> ProgramError {
+    let instruction_error: InstructionError = err.into();
+    let error_msg = format!("Instruction Error: {:?}", instruction_error);
+    pinocchio::msg!(&error_msg);
+    instruction_error.into()
 }

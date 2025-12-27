@@ -1,5 +1,5 @@
 use {
-    crate::{find_counter_address, AccountDiscriminator, CounterError, CounterV1, COUNTER_SEED},
+    crate::{find_counter_address, AccountDiscriminator, CounterV1, COUNTER_SEED},
     pinocchio::{
         account_info::AccountInfo, instruction::Signer, program_error::ProgramError,
         pubkey::Pubkey, seeds,
@@ -20,7 +20,7 @@ pub struct InitializeCounterV1Accounts<'a> {
     pub system_program: &'a AccountInfo,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 pub enum InitializeCounterV1Error {
     ProgramError(ProgramError),
     NotEnoughAccounts { expected: usize, observed: usize },
@@ -31,8 +31,8 @@ pub enum InitializeCounterV1Error {
     CounterMustHaveZeroLamports,
     CounterMustBeOwnedBySystemProgram,
     SystemProgramAddressMismatch,
-    DeserializeError,
-    SerializeError,
+    DeserializeError(ReadError),
+    SerializeError(WriteError),
     SerializedSizeMismatch { expected: usize, observed: usize },
 }
 
@@ -150,15 +150,6 @@ impl<'a> TryFrom<(&Pubkey, &'a [AccountInfo])> for InitializeCounterV1Accounts<'
     }
 }
 
-impl From<InitializeCounterV1Error> for CounterError {
-    fn from(err: InitializeCounterV1Error) -> Self {
-        match err {
-            InitializeCounterV1Error::ProgramError(pe) => CounterError::ProgramError(pe),
-            _ => CounterError::InitializeCounterV1(err),
-        }
-    }
-}
-
 impl From<ProgramError> for InitializeCounterV1Error {
     fn from(err: ProgramError) -> Self {
         InitializeCounterV1Error::ProgramError(err)
@@ -166,13 +157,13 @@ impl From<ProgramError> for InitializeCounterV1Error {
 }
 
 impl From<ReadError> for InitializeCounterV1Error {
-    fn from(_: ReadError) -> Self {
-        Self::DeserializeError
+    fn from(err: ReadError) -> Self {
+        Self::DeserializeError(err)
     }
 }
 
 impl From<WriteError> for InitializeCounterV1Error {
-    fn from(_: WriteError) -> Self {
-        Self::SerializeError
+    fn from(err: WriteError) -> Self {
+        Self::SerializeError(err)
     }
 }

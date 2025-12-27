@@ -1,8 +1,5 @@
 use {
-    crate::{
-        find_counter_address, AccountDiscriminator, AccountDiscriminatorError, CounterError,
-        CounterV1,
-    },
+    crate::{find_counter_address, AccountDiscriminator, AccountDiscriminatorError, CounterV1},
     pinocchio::{account_info::AccountInfo, program_error::ProgramError, pubkey::Pubkey},
     wincode::{ReadError, WriteError},
 };
@@ -17,7 +14,7 @@ pub struct DecrementCountV1Accounts<'a> {
     pub counter: &'a AccountInfo,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 pub enum DecrementCountV1Error {
     ProgramError(ProgramError),
     NotEnoughAccounts { expected: usize, observed: usize },
@@ -25,18 +22,18 @@ pub enum DecrementCountV1Error {
     CounterMustBeWriteable,
     CounterAddressMismatch,
     CounterMustBeOwnedByProgram,
-    DeserializeError,
-    SerializeError,
+    DeserializeError(ReadError),
+    SerializeError(WriteError),
     OwnerMismatch,
     SerializedSizeMismatch { expected: usize, observed: usize },
     AccountDiscriminatorError(AccountDiscriminatorError),
 }
 
 impl DecrementCountV1<'_> {
-    /// Executes the decrement count instruction.
+    /// Decrements count by 1. Only the owner may decrement.
     ///
-    /// Decrements the counter's count by 1. Only the counter's owner may decrement.
-    /// Uses saturating subtraction, so the count will not go below 0.
+    /// Count saturates at `0` and will not underflow.
+    /// If the count is `0`, the count will remain at `0`.
     ///
     /// # Errors
     ///
@@ -127,15 +124,6 @@ impl From<AccountDiscriminatorError> for DecrementCountV1Error {
     }
 }
 
-impl From<DecrementCountV1Error> for CounterError {
-    fn from(err: DecrementCountV1Error) -> Self {
-        match err {
-            DecrementCountV1Error::ProgramError(pe) => CounterError::ProgramError(pe),
-            _ => CounterError::DecrementCountV1(err),
-        }
-    }
-}
-
 impl From<ProgramError> for DecrementCountV1Error {
     fn from(err: ProgramError) -> Self {
         DecrementCountV1Error::ProgramError(err)
@@ -143,13 +131,13 @@ impl From<ProgramError> for DecrementCountV1Error {
 }
 
 impl From<ReadError> for DecrementCountV1Error {
-    fn from(_: ReadError) -> Self {
-        Self::DeserializeError
+    fn from(err: ReadError) -> Self {
+        Self::DeserializeError(err)
     }
 }
 
 impl From<WriteError> for DecrementCountV1Error {
-    fn from(_: WriteError) -> Self {
-        Self::SerializeError
+    fn from(err: WriteError) -> Self {
+        Self::SerializeError(err)
     }
 }

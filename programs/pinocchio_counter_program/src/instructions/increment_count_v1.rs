@@ -1,8 +1,5 @@
 use {
-    crate::{
-        find_counter_address, AccountDiscriminator, AccountDiscriminatorError, CounterError,
-        CounterV1,
-    },
+    crate::{find_counter_address, AccountDiscriminator, AccountDiscriminatorError, CounterV1},
     pinocchio::{account_info::AccountInfo, program_error::ProgramError, pubkey::Pubkey},
     wincode::{ReadError, WriteError},
 };
@@ -17,7 +14,7 @@ pub struct IncrementCountV1Accounts<'a> {
     pub counter: &'a AccountInfo,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 pub enum IncrementCountV1Error {
     ProgramError(ProgramError),
     NotEnoughAccounts { expected: usize, observed: usize },
@@ -25,17 +22,18 @@ pub enum IncrementCountV1Error {
     CounterMustBeWriteable,
     CounterAddressMismatch,
     CounterMustBeOwnedByProgram,
-    DeserializeError,
-    SerializeError,
+    DeserializeError(ReadError),
+    SerializeError(WriteError),
     OwnerMismatch,
     SerializedSizeMismatch { expected: usize, observed: usize },
     AccountDiscriminatorError(AccountDiscriminatorError),
 }
 
 impl IncrementCountV1<'_> {
-    /// Executes the increment count instruction.
+    /// Increments the count by 1. Only the owner may increment.
     ///
-    /// Increments the counter's count by 1. Only the counter's owner may increment.
+    /// Count saturates at `u64::MAX` and will not overflow.
+    /// If the count is `u64::MAX`, the count will remain at `u64::MAX`.
     ///
     /// # Errors
     ///
@@ -126,15 +124,6 @@ impl From<AccountDiscriminatorError> for IncrementCountV1Error {
     }
 }
 
-impl From<IncrementCountV1Error> for CounterError {
-    fn from(err: IncrementCountV1Error) -> Self {
-        match err {
-            IncrementCountV1Error::ProgramError(pe) => CounterError::ProgramError(pe),
-            _ => CounterError::IncrementCountV1(err),
-        }
-    }
-}
-
 impl From<ProgramError> for IncrementCountV1Error {
     fn from(err: ProgramError) -> Self {
         IncrementCountV1Error::ProgramError(err)
@@ -142,13 +131,13 @@ impl From<ProgramError> for IncrementCountV1Error {
 }
 
 impl From<ReadError> for IncrementCountV1Error {
-    fn from(_: ReadError) -> Self {
-        Self::DeserializeError
+    fn from(err: ReadError) -> Self {
+        Self::DeserializeError(err)
     }
 }
 
 impl From<WriteError> for IncrementCountV1Error {
-    fn from(_: WriteError) -> Self {
-        Self::SerializeError
+    fn from(err: WriteError) -> Self {
+        Self::SerializeError(err)
     }
 }

@@ -1,7 +1,7 @@
 use {
     crate::{
-        find_counter_address, AccountDiscriminator, AccountDiscriminatorError, CounterError,
-        CounterV1, DEACTIVATED_ACCOUNT_SIZE,
+        find_counter_address, AccountDiscriminator, AccountDiscriminatorError, CounterV1,
+        DEACTIVATED_ACCOUNT_SIZE,
     },
     pinocchio::{
         account_info::AccountInfo,
@@ -23,7 +23,7 @@ pub struct DeactivateCounterV1Accounts<'a> {
     pub counter_bump: u8,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 pub enum DeactivateCounterV1Error {
     ProgramError(ProgramError),
     NotEnoughAccounts { expected: usize, observed: usize },
@@ -32,8 +32,7 @@ pub enum DeactivateCounterV1Error {
     CounterMustBeWriteable,
     CounterAddressMismatch,
     CounterMustBeOwnedByProgram,
-    DeserializeError,
-    SerializeError,
+    DeserializeError(ReadError),
     OwnerMismatch,
     AccountDiscriminatorError(AccountDiscriminatorError),
 }
@@ -146,27 +145,18 @@ impl<'a> TryFrom<(&Pubkey, &'a [AccountInfo])> for DeactivateCounterV1Accounts<'
 
 impl From<AccountDiscriminatorError> for DeactivateCounterV1Error {
     fn from(err: AccountDiscriminatorError) -> Self {
-        DeactivateCounterV1Error::AccountDiscriminatorError(err)
-    }
-}
-
-impl From<DeactivateCounterV1Error> for CounterError {
-    fn from(err: DeactivateCounterV1Error) -> Self {
-        match err {
-            DeactivateCounterV1Error::ProgramError(pe) => CounterError::ProgramError(pe),
-            _ => CounterError::DeactivateCounterV1(err),
-        }
+        Self::AccountDiscriminatorError(err)
     }
 }
 
 impl From<ProgramError> for DeactivateCounterV1Error {
     fn from(err: ProgramError) -> Self {
-        DeactivateCounterV1Error::ProgramError(err)
+        Self::ProgramError(err)
     }
 }
 
 impl From<ReadError> for DeactivateCounterV1Error {
-    fn from(_: ReadError) -> Self {
-        Self::DeserializeError
+    fn from(err: ReadError) -> Self {
+        Self::DeserializeError(err)
     }
 }

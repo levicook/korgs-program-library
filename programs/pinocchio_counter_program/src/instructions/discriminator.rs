@@ -1,14 +1,28 @@
-use crate::{CounterError, CounterResult};
+use wincode::{SchemaRead, SchemaWrite};
 
 #[repr(u8)]
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, SchemaRead, SchemaWrite)]
 pub enum InstructionDiscriminator {
+    #[wincode(tag = 1)]
     InitializeCounterV1 = 1,
+
+    #[wincode(tag = 2)]
     DeactivateCounterV1 = 2,
 
+    #[wincode(tag = 3)]
     DecrementCountV1 = 3,
+
+    #[wincode(tag = 4)]
     IncrementCountV1 = 4,
+
+    #[wincode(tag = 5)]
     SetCountV1 = 5,
+}
+
+#[derive(Debug)]
+pub enum InstructionDiscriminatorError {
+    Missing,
+    Invalid(u8),
 }
 
 impl InstructionDiscriminator {
@@ -18,18 +32,19 @@ impl InstructionDiscriminator {
     ///
     /// # Errors
     ///
-    /// Returns [`CounterError::InvalidInstructionDiscriminator`] if the instruction data is empty
-    /// or the discriminator byte is not a valid instruction type.
-    pub fn parse(instruction_data: &[u8]) -> CounterResult<(Self, &[u8])> {
+    /// Returns [`InstructionDiscriminatorError::Missing`] if the instruction data is empty
+    /// or [`InstructionDiscriminatorError::Invalid`] if the discriminator byte is not a valid instruction type.
+    pub fn parse(instruction_data: &[u8]) -> Result<(Self, &[u8]), InstructionDiscriminatorError> {
         let (first, rest) = instruction_data
             .split_first()
-            .ok_or(CounterError::EmptyInstructionData)?;
+            .ok_or(InstructionDiscriminatorError::Missing)?;
+
         Ok((Self::try_from(first)?, rest))
     }
 }
 
 impl TryFrom<&u8> for InstructionDiscriminator {
-    type Error = CounterError;
+    type Error = InstructionDiscriminatorError;
 
     fn try_from(byte: &u8) -> Result<Self, Self::Error> {
         match *byte {
@@ -38,7 +53,7 @@ impl TryFrom<&u8> for InstructionDiscriminator {
             3 => Ok(InstructionDiscriminator::DecrementCountV1),
             4 => Ok(InstructionDiscriminator::IncrementCountV1),
             5 => Ok(InstructionDiscriminator::SetCountV1),
-            _ => Err(CounterError::InvalidInstructionDiscriminator(*byte)),
+            _ => Err(InstructionDiscriminatorError::Invalid(*byte)),
         }
     }
 }
@@ -57,7 +72,7 @@ impl From<InstructionDiscriminator> for u8 {
 
 #[cfg(test)]
 mod tests {
-    use {super::*, crate::CounterError};
+    use super::*;
 
     #[test]
     fn test_parse_initialize_counter_v1() {
@@ -93,7 +108,10 @@ mod tests {
         let result = InstructionDiscriminator::parse(&[]);
 
         assert!(result.is_err());
-        assert_eq!(result.unwrap_err(), CounterError::EmptyInstructionData);
+        assert!(matches!(
+            result.unwrap_err(),
+            InstructionDiscriminatorError::Missing
+        ));
     }
 
     #[test]
@@ -105,10 +123,10 @@ mod tests {
             let result = InstructionDiscriminator::parse(&instruction_data);
 
             assert!(result.is_err());
-            assert_eq!(
+            assert!(matches!(
                 result.unwrap_err(),
-                CounterError::InvalidInstructionDiscriminator(invalid_byte)
-            );
+                InstructionDiscriminatorError::Invalid(_)
+            ));
         }
     }
 

@@ -11,9 +11,6 @@ pub enum SetCountV1IxError {
     #[error("Owner must be a signer")]
     OwnerMustBeSigner,
 
-    #[error("Owner must be writable")]
-    OwnerMustBeWriteable,
-
     #[error("Counter account must be writable")]
     CounterMustBeWriteable,
 
@@ -57,7 +54,7 @@ impl SetCountV1Ix {
             owner: AccountMeta {
                 pubkey: owner,
                 is_signer: true,
-                is_writable: true,
+                is_writable: false,
             },
             counter: AccountMeta {
                 pubkey: counter_address,
@@ -97,10 +94,6 @@ impl SetCountV1Ix {
     pub fn validate(&self) -> Result<(), SetCountV1IxError> {
         if !self.owner.is_signer {
             return Err(SetCountV1IxError::OwnerMustBeSigner);
-        }
-
-        if !self.owner.is_writable {
-            return Err(SetCountV1IxError::OwnerMustBeWriteable);
         }
 
         let (expected_counter, _bump) = find_counter_address(&self.program_id, &self.owner.pubkey);
@@ -178,7 +171,7 @@ mod tests {
         let set_ix = SetCountV1Ix::new(program_id, owner, 100);
 
         assert!(set_ix.owner.is_signer);
-        assert!(set_ix.owner.is_writable);
+        assert!(!set_ix.owner.is_writable);
         assert!(!set_ix.counter.is_signer);
         assert!(set_ix.counter.is_writable);
 
@@ -198,15 +191,15 @@ mod tests {
     }
 
     #[test]
-    fn test_validate_fails_when_owner_not_writable() {
+    fn test_validate_succeeds_when_owner_not_writable() {
         let program_id = Pubkey::new_unique();
         let owner = Pubkey::new_unique();
 
         let mut set_ix = SetCountV1Ix::new(program_id, owner, 50);
         set_ix.owner.is_writable = false;
 
-        let err = set_ix.validate().unwrap_err();
-        assert_eq!(err.to_string(), "Owner must be writable");
+        // This should succeed because the program doesn't require owner to be writable
+        assert!(set_ix.validate().is_ok());
     }
 
     #[test]

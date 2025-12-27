@@ -10,9 +10,6 @@ pub enum DecrementCountV1IxError {
     #[error("Owner must be a signer")]
     OwnerMustBeSigner,
 
-    #[error("Owner must be writable")]
-    OwnerMustBeWriteable,
-
     #[error("Counter account must be writable")]
     CounterMustBeWriteable,
 
@@ -51,7 +48,7 @@ impl DecrementCountV1Ix {
             owner: AccountMeta {
                 pubkey: owner,
                 is_signer: true,
-                is_writable: true,
+                is_writable: false,
             },
             counter: AccountMeta {
                 pubkey: counter_address,
@@ -83,10 +80,6 @@ impl DecrementCountV1Ix {
     pub fn validate(&self) -> Result<(), DecrementCountV1IxError> {
         if !self.owner.is_signer {
             return Err(DecrementCountV1IxError::OwnerMustBeSigner);
-        }
-
-        if !self.owner.is_writable {
-            return Err(DecrementCountV1IxError::OwnerMustBeWriteable);
         }
 
         let (expected_counter, _bump) = find_counter_address(&self.program_id, &self.owner.pubkey);
@@ -155,7 +148,7 @@ mod tests {
         let decrement_ix = DecrementCountV1Ix::new(program_id, owner);
 
         assert!(decrement_ix.owner.is_signer);
-        assert!(decrement_ix.owner.is_writable);
+        assert!(!decrement_ix.owner.is_writable);
         assert!(!decrement_ix.counter.is_signer);
         assert!(decrement_ix.counter.is_writable);
 
@@ -175,15 +168,15 @@ mod tests {
     }
 
     #[test]
-    fn test_validate_fails_when_owner_not_writable() {
+    fn test_validate_succeeds_when_owner_not_writable() {
         let program_id = Pubkey::new_unique();
         let owner = Pubkey::new_unique();
 
         let mut decrement_ix = DecrementCountV1Ix::new(program_id, owner);
         decrement_ix.owner.is_writable = false;
 
-        let err = decrement_ix.validate().unwrap_err();
-        assert_eq!(err.to_string(), "Owner must be writable");
+        // This should succeed because the program doesn't require owner to be writable
+        assert!(decrement_ix.validate().is_ok());
     }
 
     #[test]

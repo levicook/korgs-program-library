@@ -10,9 +10,6 @@ pub enum IncrementCountV1IxError {
     #[error("Owner must be a signer")]
     OwnerMustBeSigner,
 
-    #[error("Owner must be writable")]
-    OwnerMustBeWriteable,
-
     #[error("Counter account must be writable")]
     CounterMustBeWriteable,
 
@@ -51,7 +48,7 @@ impl IncrementCountV1Ix {
             owner: AccountMeta {
                 pubkey: owner,
                 is_signer: true,
-                is_writable: true,
+                is_writable: false,
             },
             counter: AccountMeta {
                 pubkey: counter_address,
@@ -83,10 +80,6 @@ impl IncrementCountV1Ix {
     pub fn validate(&self) -> Result<(), IncrementCountV1IxError> {
         if !self.owner.is_signer {
             return Err(IncrementCountV1IxError::OwnerMustBeSigner);
-        }
-
-        if !self.owner.is_writable {
-            return Err(IncrementCountV1IxError::OwnerMustBeWriteable);
         }
 
         let (expected_counter, _bump) = find_counter_address(&self.program_id, &self.owner.pubkey);
@@ -155,7 +148,7 @@ mod tests {
         let increment_ix = IncrementCountV1Ix::new(program_id, owner);
 
         assert!(increment_ix.owner.is_signer);
-        assert!(increment_ix.owner.is_writable);
+        assert!(!increment_ix.owner.is_writable);
         assert!(!increment_ix.counter.is_signer);
         assert!(increment_ix.counter.is_writable);
 
@@ -172,18 +165,6 @@ mod tests {
 
         let err = increment_ix.validate().unwrap_err();
         assert_eq!(err.to_string(), "Owner must be a signer");
-    }
-
-    #[test]
-    fn test_validate_fails_when_owner_not_writable() {
-        let program_id = Pubkey::new_unique();
-        let owner = Pubkey::new_unique();
-
-        let mut increment_ix = IncrementCountV1Ix::new(program_id, owner);
-        increment_ix.owner.is_writable = false;
-
-        let err = increment_ix.validate().unwrap_err();
-        assert_eq!(err.to_string(), "Owner must be writable");
     }
 
     #[test]

@@ -21,7 +21,6 @@ pinocchio_counter_program = { path = "programs/pinocchio_counter_program" }
 pinocchio_counter_client = { path = "clients/rust/pinocchio_counter_client" }
 
 bolero = "0.13.4"
-kani = "0.0.1"
 litesvm = "0.8.2"
 pinocchio = "0.9.2"
 pinocchio-system = "0.4.0"

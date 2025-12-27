@@ -930,15 +930,14 @@ checksum = "3f9eec918d3f24069decb9af1554cad7c880e2da24a9afd88aca000531ab82c1"
 [[package]]
 name = "formal-verification-tests"
 version = "0.1.0"
-dependencies = [
- "kani",
-]
 
 [[package]]
 name = "fuzz-tests"
 version = "0.1.0"
 dependencies = [
  "bolero",
+ "pinocchio",
+ "pinocchio_counter_program",
 ]
 
 [[package]]
@@ -1133,12 +1132,6 @@ dependencies = [
  "sha2 0.10.9",
  "signature",
 ]
-
-[[package]]
-name = "kani"
-version = "0.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7b4b7234edbef8bfed0dd44c39b0cd344d4ef7fa2bcb5dec3c9c334874ed8744"
 
 [[package]]
 name = "keccak"

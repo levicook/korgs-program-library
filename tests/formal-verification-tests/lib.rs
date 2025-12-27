@@ -1,1 +1,2 @@
-// Empty file to satisfy Cargo
+#[cfg(kani)]
+mod pinocchio_counter;

@@ -1,1 +1,2 @@
-// Empty file to satisfy Cargo
+#[cfg(test)]
+mod pinocchio_counter;

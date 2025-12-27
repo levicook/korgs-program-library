@@ -8,3 +8,5 @@ path = "lib.rs"
 
 [dependencies]
 bolero = { workspace = true }
+pinocchio = { workspace = true }
+pinocchio_counter_program = { workspace = true, features = ["no-entrypoint"] }

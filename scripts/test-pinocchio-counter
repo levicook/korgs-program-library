@@ -4,17 +4,134 @@ set -euo pipefail
 source $(dirname $0)/env.sh
 cd $PROJECT_ROOT
 
-./scripts/build-pinocchio-counter
+run_unit_tests() {
+    echo "> Unit testing pinocchio_counter_program..."
+    cd $PROJECT_ROOT/programs/pinocchio_counter_program
+    cargo test-sbf
+    cd $PROJECT_ROOT
 
-echo "> Unit testing pinocchio_counter_program..."
-cd $PROJECT_ROOT/programs/pinocchio_counter_program
-cargo test-sbf
-cd $PROJECT_ROOT
+    echo "> Unit testing pinocchio_counter_client..."
+    cargo test -p pinocchio_counter_client
+}
 
-echo "> Unit testing pinocchio_counter_client..."
-cargo test -p pinocchio_counter_client
+run_integration_tests() {
+    echo "> Integration testing pinocchio_counter..."
+    cargo test -p integration-tests pinocchio_counter
+}
 
-echo "> Integration testing pinocchio_counter..."
-cargo test -p integration-tests pinocchio_counter
+run_fuzz_tests() {
+    echo "> Fuzz testing pinocchio_counter..."
+    cargo test -p fuzz-tests pinocchio_counter
+}
+
+run_formal_verification_tests() {
+    echo "> Formal verification testing pinocchio_counter..."
+    cargo kani -p formal-verification-tests
+}
+
+run_all_tests() {
+    run_unit_tests
+    run_integration_tests
+    run_fuzz_tests
+    run_formal_verification_tests
+}
+
+show_usage() {
+    cat <<EOF
+Usage: $0 [OPTIONS]
+
+Options:
+    --unit-only              Run only unit tests
+    --integration-only       Run only integration tests
+    --fuzz-only              Run only fuzz tests
+    --formal-only            Run only formal verification tests
+    --all                    Run all test types (unit, integration, fuzz, formal)
+    --help                   Show this help message
+
+Examples:
+    $0                       # Fast: unit + integration tests (default)
+    $0 --all                 # Run everything
+    $0 --fuzz-only           # Just fuzz tests
+
+Note: For test filtering, use cargo directly:
+    cargo test -p integration-tests pinocchio_counter increment_count
+EOF
+    exit 0
+}
+
+# Parse arguments first (before building)
+TEST_TYPE="default"
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --unit-only)
+            TEST_TYPE="unit"
+            shift
+            ;;
+        --integration-only)
+            TEST_TYPE="integration"
+            shift
+            ;;
+        --fuzz-only)
+            TEST_TYPE="fuzz"
+            shift
+            ;;
+        --formal-only)
+            TEST_TYPE="formal"
+            shift
+            ;;
+        --all)
+            TEST_TYPE="all"
+            shift
+            ;;
+        --help|-h)
+            show_usage
+            ;;
+        *)
+            echo "Unknown option: $1"
+            show_usage
+            ;;
+    esac
+done
+
+# Build program only if needed (integration/fuzz tests need the .so file)
+# Unit tests and formal verification (Kani) build their own artifacts
+needs_build=false
+case "$TEST_TYPE" in
+    integration|fuzz|all|default)
+        needs_build=true
+        ;;
+    unit|formal)
+        needs_build=false
+        ;;
+esac
+
+if [ "$needs_build" = true ]; then
+    ./scripts/build-pinocchio-counter
+fi
+
+# Run tests based on type
+case "$TEST_TYPE" in
+    unit)
+        run_unit_tests
+        ;;
+    integration)
+        run_integration_tests
+        ;;
+    fuzz)
+        run_fuzz_tests
+        ;;
+    formal)
+        run_formal_verification_tests
+        ;;
+    all)
+        run_all_tests
+        ;;
+    default)
+        # Fast feedback: unit + integration only
+        run_unit_tests
+        run_integration_tests
+        ;;
+esac
 
 echo "> Test complete!"

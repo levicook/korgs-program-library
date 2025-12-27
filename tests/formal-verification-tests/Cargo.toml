@@ -2,9 +2,9 @@
 name = "formal-verification-tests"
 version = { workspace = true }
 edition = { workspace = true }
+build = "build.rs"
 
 [lib]
 path = "lib.rs"
 
 [dependencies]
-kani = { workspace = true }

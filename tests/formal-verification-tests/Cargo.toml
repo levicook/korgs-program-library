@@ -1,0 +1,10 @@
+[package]
+name = "formal-verification-tests"
+version = { workspace = true }
+edition = { workspace = true }
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+kani = { workspace = true }

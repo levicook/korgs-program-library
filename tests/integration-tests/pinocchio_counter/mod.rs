@@ -35,7 +35,7 @@ impl TestContext {
         let program_id = Pubkey::new_unique();
 
         let program_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../target/sbpf-solana-solana/release/pinocchio_counter_program.so")
+            .join("../../target/sbpf-solana-solana/release/pinocchio_counter_program.so")
             .canonicalize()?;
 
         litesvm.add_program_from_file(program_id, program_path)?;

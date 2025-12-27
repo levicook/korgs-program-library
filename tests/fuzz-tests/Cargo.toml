@@ -1,0 +1,10 @@
+[package]
+name = "fuzz-tests"
+version = { workspace = true }
+edition = { workspace = true }
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+bolero = { workspace = true }

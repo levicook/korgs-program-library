@@ -10,7 +10,9 @@ crate-type = ["cdylib", "lib"]
 no-entrypoint = []
 
 [lints.rust]
-unexpected_cfgs = { level = "warn", check-cfg = ['cfg(target_os, values("solana"))'] }
+unexpected_cfgs = { level = "warn", check-cfg = [
+    'cfg(target_os, values("solana"))',
+] }
 
 [dependencies]
 pinocchio = { workspace = true }

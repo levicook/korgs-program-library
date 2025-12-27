@@ -33,16 +33,13 @@ pub struct CounterV1 {
 
 impl CounterV1 {
     /// Returns the size in bytes required to store a [`CounterV1`] account.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the type metadata indicates a dynamic size, which should never
-    /// happen for [`CounterV1`] as it has a fixed layout.
     #[must_use]
     pub const fn size() -> usize {
-        match <Self as wincode::SchemaWrite>::TYPE_META {
-            wincode::TypeMeta::Static { size, .. } => size,
-            wincode::TypeMeta::Dynamic => panic!("CounterV1 should have static size"),
+        if let wincode::TypeMeta::Static { size, .. } = <Self as wincode::SchemaWrite>::TYPE_META {
+            size
+        } else {
+            // CounterV1 has a fixed layout, so TYPE_META is always Static.
+            unreachable!()
         }
     }
 
@@ -103,5 +100,12 @@ mod tests {
         assert_eq!(original.reserved, deserialized.reserved);
 
         Ok(())
+    }
+
+    #[test]
+    fn test_size_is_resolved_at_compile_time() {
+        const CONST_SIZE: usize = CounterV1::size();
+        assert_eq!(CONST_SIZE, CounterV1::size());
+        const { assert!(CONST_SIZE > 0) }
     }
 }

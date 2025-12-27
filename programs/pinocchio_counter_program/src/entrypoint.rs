@@ -56,7 +56,6 @@ pub fn process_instruction(
 fn handle_instruction_error<E: std::fmt::Debug + Into<CounterError>>(err: E) -> ProgramError {
     let counter_error: CounterError = err.into();
 
-    // Use Display format - it delegates to Debug for detailed error information
     let error_msg = format!("Error: {}", counter_error);
     pinocchio::msg!(&error_msg);
 

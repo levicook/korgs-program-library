@@ -81,6 +81,10 @@ impl TestContext {
         self.svm.get_account(&pubkey)
     }
 
+    pub fn set_account(&mut self, pubkey: Pubkey, data: Account) -> Result<(), LiteSVMError> {
+        self.svm.set_account(pubkey, data)
+    }
+
     #[must_use]
     pub fn latest_blockhash(&self) -> Hash {
         self.svm.latest_blockhash()

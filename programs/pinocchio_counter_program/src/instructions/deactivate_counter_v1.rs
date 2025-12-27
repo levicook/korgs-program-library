@@ -43,6 +43,7 @@ impl DeactivateCounterV1<'_> {
     /// Executes the deactivate counter instruction.
     ///
     /// Deactivates a counter account by:
+    /// - Verifying the account discriminator is `CounterV1Account`
     /// - Verifying the owner matches the counter's stored owner
     /// - Marking the account as deactivated with the `DeactivatedAccount` discriminator
     /// - Resizing the account to 1 byte (discriminator only)
@@ -59,6 +60,10 @@ impl DeactivateCounterV1<'_> {
             let counter_data = self.accounts.counter.try_borrow_data()?;
             CounterV1::deserialize(&counter_data)?
         };
+
+        if counter_state.discriminator != AccountDiscriminator::CounterV1Account {
+            return Err(DeactivateCounterV1Error::DeserializeError);
+        }
 
         if counter_state.owner != *self.accounts.owner.key() {
             return Err(DeactivateCounterV1Error::OwnerMismatch);

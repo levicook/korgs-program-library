@@ -8,9 +8,11 @@ use {
     },
     pinocchio_counter_client::{
         find_counter_address,
-        transactions::{IncrementCountV1SimpleTx, InitializeCounterV1SimpleTx},
+        transactions::{
+            DeactivateCounterV1SimpleTx, IncrementCountV1SimpleTx, InitializeCounterV1SimpleTx,
+        },
     },
-    pinocchio_counter_program::CounterV1,
+    pinocchio_counter_program::{AccountDiscriminator, CounterV1},
     solana_instruction::AccountMeta,
     solana_keypair::Signer,
 };
@@ -289,6 +291,92 @@ fn fails_when_counter_not_initialized() -> TestResult {
     // The transaction will fail because the counter account doesn't exist
     // The exact error depends on how LiteSVM handles missing accounts
     demand_tx_failure(&tx_result);
+
+    Ok(())
+}
+
+#[test]
+fn fails_when_counter_has_invalid_discriminator() -> TestResult {
+    let mut ctx = TestContext::try_new()?;
+    let owner_kp = ctx.create_funded_keypair();
+    let owner_pk = owner_kp.pubkey();
+
+    let init_counter_tx = InitializeCounterV1SimpleTx::try_new(
+        ctx.program_id(),
+        owner_kp.insecure_clone(),
+        ctx.latest_blockhash(),
+    )?;
+
+    let tx_result = ctx.send_transaction(init_counter_tx);
+    demand_tx_success(&tx_result);
+
+    let (counter_pk, _) = find_counter_address(&ctx.program_id(), &owner_pk);
+
+    let counter_account = ctx
+        .get_account(counter_pk)
+        .ok_or("Counter account should exist")?;
+
+    let mut counter = CounterV1::deserialize(&counter_account.data)?;
+    assert_eq!(
+        counter.discriminator,
+        AccountDiscriminator::CounterV1Account,
+        "Counter should have CounterV1Account discriminator before corruption"
+    );
+
+    counter.discriminator = AccountDiscriminator::DeactivatedAccount;
+
+    let corrupted_data = counter.serialize()?;
+    let mut corrupted_account = counter_account;
+    corrupted_account.data = corrupted_data;
+
+    ctx.set_account(counter_pk, corrupted_account)?;
+    ctx.advance_slot(1)?;
+
+    let increment_tx =
+        IncrementCountV1SimpleTx::try_new(ctx.program_id(), owner_kp, ctx.latest_blockhash())?;
+
+    let tx_result = ctx.send_transaction(increment_tx);
+
+    demand_tx_failure(&tx_result);
+    demand_logs_contain("failed: custom program error: 0x307", &tx_result);
+
+    Ok(())
+}
+
+#[test]
+fn fails_when_counter_is_deactivated() -> TestResult {
+    let mut ctx = TestContext::try_new()?;
+    let owner_kp = ctx.create_funded_keypair();
+
+    let init_counter_tx = InitializeCounterV1SimpleTx::try_new(
+        ctx.program_id(),
+        owner_kp.insecure_clone(),
+        ctx.latest_blockhash(),
+    )?;
+
+    let tx_result = ctx.send_transaction(init_counter_tx);
+    demand_tx_success(&tx_result);
+
+    ctx.advance_slot(1)?;
+
+    let deactivate_tx = DeactivateCounterV1SimpleTx::try_new(
+        ctx.program_id(),
+        owner_kp.insecure_clone(),
+        ctx.latest_blockhash(),
+    )?;
+
+    let tx_result = ctx.send_transaction(deactivate_tx);
+    demand_tx_success(&tx_result);
+
+    ctx.advance_slot(1)?;
+
+    let increment_tx =
+        IncrementCountV1SimpleTx::try_new(ctx.program_id(), owner_kp, ctx.latest_blockhash())?;
+
+    let tx_result = ctx.send_transaction(increment_tx);
+
+    demand_tx_failure(&tx_result);
+    demand_logs_contain("failed: custom program error: 0x307", &tx_result);
 
     Ok(())
 }

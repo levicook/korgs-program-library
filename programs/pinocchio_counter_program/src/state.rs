@@ -8,8 +8,17 @@ pub const DEACTIVATED_ACCOUNT_SIZE: usize = 1;
 #[repr(u8)]
 #[derive(Debug, PartialEq, SchemaRead, SchemaWrite)]
 pub enum AccountDiscriminator {
-    CounterV1 = 1,
+    CounterV1Account = 1,
     DeactivatedAccount = 255,
+}
+
+impl From<AccountDiscriminator> for u8 {
+    fn from(discriminator: AccountDiscriminator) -> Self {
+        match discriminator {
+            AccountDiscriminator::CounterV1Account => 1,
+            AccountDiscriminator::DeactivatedAccount => 255,
+        }
+    }
 }
 
 #[repr(C)]
@@ -59,7 +68,7 @@ impl CounterV1 {
 impl Default for CounterV1 {
     fn default() -> Self {
         Self {
-            discriminator: AccountDiscriminator::CounterV1,
+            discriminator: AccountDiscriminator::CounterV1Account,
             owner: Pubkey::default(),
             bump: 0,
             count: 0,
@@ -76,7 +85,7 @@ mod tests {
     fn test_counter_serialization_roundtrip() -> wincode::Result<()> {
         // Verify that Counter can be serialized and deserialized without data loss
         let original = CounterV1 {
-            discriminator: AccountDiscriminator::CounterV1,
+            discriminator: AccountDiscriminator::CounterV1Account,
             owner: [2; 32],
             bump: 1,
             count: 100,

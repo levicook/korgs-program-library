@@ -1,7 +1,7 @@
 use {
     crate::{find_counter_address, AccountDiscriminator, CounterError, CounterV1},
-    pinocchio::{account_info::AccountInfo, pubkey::Pubkey, ProgramResult},
-    wincode::{ReadError, SchemaRead, SchemaWrite},
+    pinocchio::{account_info::AccountInfo, program_error::ProgramError, pubkey::Pubkey},
+    wincode::{ReadError, SchemaRead, SchemaWrite, WriteError},
 };
 
 #[repr(C)]
@@ -33,6 +33,21 @@ pub struct SetCountV1Accounts<'a> {
     pub counter_bump: u8,
 }
 
+#[derive(Debug, PartialEq)]
+pub enum SetCountV1Error {
+    ProgramError(ProgramError),
+    NotEnoughAccounts { expected: usize, observed: usize },
+    OwnerMustBeSigner,
+    OwnerMustBeWritable,
+    CounterMustBeWriteable,
+    CounterAddressMismatch,
+    CounterMustBeOwnedByProgram,
+    DeserializeError,
+    SerializeError,
+    OwnerMismatch,
+    SerializedSizeMismatch { expected: usize, observed: usize },
+}
+
 impl SetCountV1<'_> {
     /// Executes the set count instruction.
     ///
@@ -40,33 +55,30 @@ impl SetCountV1<'_> {
     ///
     /// # Errors
     ///
-    /// Returns a [`ProgramResult`] containing a [`CounterError`] if execution fails.
-    pub fn execute(&self) -> ProgramResult {
+    /// Returns a [`Result`] containing a [`SetCountV1Error`] if execution fails.
+    pub fn execute(&self) -> Result<(), SetCountV1Error> {
         let mut counter_state = {
             let counter_data = self.accounts.counter.try_borrow_data()?;
-            CounterV1::deserialize(&counter_data).map_err(|_| CounterError::SerializeError)?
+            CounterV1::deserialize(&counter_data)?
         };
 
-        if counter_state.discriminator != AccountDiscriminator::CounterV1 {
-            return Err(CounterError::SerializeError.into());
+        if counter_state.discriminator != AccountDiscriminator::CounterV1Account {
+            return Err(SetCountV1Error::DeserializeError);
         }
 
         if counter_state.owner != *self.accounts.owner.key() {
-            return Err(CounterError::OwnerMismatch.into());
+            return Err(SetCountV1Error::OwnerMismatch);
         }
 
         counter_state.count = self.args.count;
 
-        let serialized = counter_state
-            .serialize()
-            .map_err(|_| CounterError::SerializeError)?;
+        let serialized = counter_state.serialize()?;
 
         if serialized.len() != CounterV1::size() {
-            let counter_error = CounterError::SerializedSizeMismatch {
+            return Err(SetCountV1Error::SerializedSizeMismatch {
                 expected: CounterV1::size(),
                 observed: serialized.len(),
-            };
-            return Err(counter_error.into());
+            });
         }
 
         self.accounts
@@ -79,13 +91,13 @@ impl SetCountV1<'_> {
 }
 
 impl<'a> TryFrom<(&'a Pubkey, &'a [AccountInfo], &[u8])> for SetCountV1<'a> {
-    type Error = CounterError;
+    type Error = SetCountV1Error;
 
     fn try_from(
         (program_id, accounts, args): (&'a Pubkey, &'a [AccountInfo], &[u8]),
     ) -> Result<Self, Self::Error> {
         let accounts = SetCountV1Accounts::try_from((program_id, accounts))?;
-        let args = SetCountV1Args::deserialize(args).map_err(|_| CounterError::SerializeError)?;
+        let args = SetCountV1Args::deserialize(args)?;
         Ok(Self {
             program_id,
             accounts,
@@ -95,36 +107,36 @@ impl<'a> TryFrom<(&'a Pubkey, &'a [AccountInfo], &[u8])> for SetCountV1<'a> {
 }
 
 impl<'a> TryFrom<(&Pubkey, &'a [AccountInfo])> for SetCountV1Accounts<'a> {
-    type Error = CounterError;
+    type Error = SetCountV1Error;
 
     fn try_from((program_id, accounts): (&Pubkey, &'a [AccountInfo])) -> Result<Self, Self::Error> {
         let [owner, counter] = accounts else {
-            return Err(CounterError::NotEnoughAccounts {
+            return Err(SetCountV1Error::NotEnoughAccounts {
                 expected: 2,
                 observed: accounts.len(),
             });
         };
 
         if !owner.is_signer() {
-            return Err(CounterError::OwnerMustBeSigner);
+            return Err(SetCountV1Error::OwnerMustBeSigner);
         }
 
         if !owner.is_writable() {
-            return Err(CounterError::OwnerMustBeWritable);
+            return Err(SetCountV1Error::OwnerMustBeWritable);
         }
 
         let (counter_address, counter_bump) = find_counter_address(program_id, owner.key());
 
         if !counter.is_writable() {
-            return Err(CounterError::CounterMustBeWriteable);
+            return Err(SetCountV1Error::CounterMustBeWriteable);
         }
 
         if counter.key() != &counter_address {
-            return Err(CounterError::CounterAddressMismatch);
+            return Err(SetCountV1Error::CounterAddressMismatch);
         }
 
         if !counter.is_owned_by(program_id) {
-            return Err(CounterError::CounterMustBeOwnedByProgram);
+            return Err(SetCountV1Error::CounterMustBeOwnedByProgram);
         }
 
         Ok(Self {
@@ -132,5 +144,32 @@ impl<'a> TryFrom<(&Pubkey, &'a [AccountInfo])> for SetCountV1Accounts<'a> {
             counter,
             counter_bump,
         })
+    }
+}
+
+impl From<SetCountV1Error> for CounterError {
+    fn from(err: SetCountV1Error) -> Self {
+        match err {
+            SetCountV1Error::ProgramError(pe) => CounterError::ProgramError(pe),
+            _ => CounterError::SetCountV1(err),
+        }
+    }
+}
+
+impl From<ProgramError> for SetCountV1Error {
+    fn from(err: ProgramError) -> Self {
+        SetCountV1Error::ProgramError(err)
+    }
+}
+
+impl From<ReadError> for SetCountV1Error {
+    fn from(_: ReadError) -> Self {
+        Self::DeserializeError
+    }
+}
+
+impl From<WriteError> for SetCountV1Error {
+    fn from(_: WriteError) -> Self {
+        Self::SerializeError
     }
 }

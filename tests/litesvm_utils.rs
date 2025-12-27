@@ -50,7 +50,7 @@ pub fn dump_tx_result(tx_result: &TransactionResult) {
     });
 
     println!("Transaction result: {tx_result:?}");
-    println!("Transaction log: {log_output}");
+    println!("Transaction log:\n{log_output}");
 }
 
 fn extract_logs(tx_result: &TransactionResult) -> &[String] {

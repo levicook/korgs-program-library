@@ -5,10 +5,11 @@ use {
     },
     pinocchio::{
         account_info::AccountInfo,
+        program_error::ProgramError,
         pubkey::Pubkey,
         sysvars::{rent::Rent, Sysvar},
-        ProgramResult,
     },
+    wincode::ReadError,
 };
 
 pub struct DeactivateCounterV1<'a> {
@@ -21,6 +22,21 @@ pub struct DeactivateCounterV1Accounts<'a> {
     pub counter: &'a AccountInfo,
     pub counter_bump: u8,
     pub system_program: &'a AccountInfo,
+}
+
+#[derive(Debug, PartialEq)]
+pub enum DeactivateCounterV1Error {
+    ProgramError(ProgramError),
+    NotEnoughAccounts { expected: usize, observed: usize },
+    OwnerMustBeSigner,
+    OwnerMustBeWritable,
+    CounterMustBeWriteable,
+    CounterAddressMismatch,
+    CounterMustBeOwnedByProgram,
+    SystemProgramAddressMismatch,
+    DeserializeError,
+    SerializeError,
+    OwnerMismatch,
 }
 
 impl DeactivateCounterV1<'_> {
@@ -37,20 +53,20 @@ impl DeactivateCounterV1<'_> {
     ///
     /// # Errors
     ///
-    /// Returns a [`ProgramResult`] containing a [`CounterError`] if execution fails.
-    pub fn execute(&self) -> ProgramResult {
+    /// Returns a [`Result`] containing a [`DeactivateCounterV1Error`] if execution fails.
+    pub fn execute(&self) -> Result<(), DeactivateCounterV1Error> {
         let counter_state = {
             let counter_data = self.accounts.counter.try_borrow_data()?;
-            CounterV1::deserialize(&counter_data).map_err(|_| CounterError::SerializeError)?
+            CounterV1::deserialize(&counter_data)?
         };
 
         if counter_state.owner != *self.accounts.owner.key() {
-            return Err(CounterError::OwnerMismatch.into());
+            return Err(DeactivateCounterV1Error::OwnerMismatch);
         }
 
         {
             let mut data = self.accounts.counter.try_borrow_mut_data()?;
-            data[0] = AccountDiscriminator::DeactivatedAccount as u8;
+            data[0] = u8::from(AccountDiscriminator::DeactivatedAccount);
         }
 
         let rent = Rent::get()?;
@@ -71,7 +87,7 @@ impl DeactivateCounterV1<'_> {
 }
 
 impl<'a> TryFrom<(&'a Pubkey, &'a [AccountInfo], &[u8])> for DeactivateCounterV1<'a> {
-    type Error = CounterError;
+    type Error = DeactivateCounterV1Error;
 
     fn try_from(
         (program_id, accounts, _args): (&'a Pubkey, &'a [AccountInfo], &[u8]),
@@ -85,40 +101,40 @@ impl<'a> TryFrom<(&'a Pubkey, &'a [AccountInfo], &[u8])> for DeactivateCounterV1
 }
 
 impl<'a> TryFrom<(&Pubkey, &'a [AccountInfo])> for DeactivateCounterV1Accounts<'a> {
-    type Error = CounterError;
+    type Error = DeactivateCounterV1Error;
 
     fn try_from((program_id, accounts): (&Pubkey, &'a [AccountInfo])) -> Result<Self, Self::Error> {
         let [owner, counter, system_program] = accounts else {
-            return Err(CounterError::NotEnoughAccounts {
+            return Err(DeactivateCounterV1Error::NotEnoughAccounts {
                 expected: 3,
                 observed: accounts.len(),
             });
         };
 
         if !owner.is_signer() {
-            return Err(CounterError::OwnerMustBeSigner);
+            return Err(DeactivateCounterV1Error::OwnerMustBeSigner);
         }
 
         if !owner.is_writable() {
-            return Err(CounterError::OwnerMustBeWritable);
+            return Err(DeactivateCounterV1Error::OwnerMustBeWritable);
         }
 
         let (counter_address, counter_bump) = find_counter_address(program_id, owner.key());
 
         if !counter.is_writable() {
-            return Err(CounterError::CounterMustBeWriteable);
+            return Err(DeactivateCounterV1Error::CounterMustBeWriteable);
         }
 
         if counter.key() != &counter_address {
-            return Err(CounterError::CounterAddressMismatch);
+            return Err(DeactivateCounterV1Error::CounterAddressMismatch);
         }
 
         if !counter.is_owned_by(program_id) {
-            return Err(CounterError::CounterMustBeOwnedByProgram);
+            return Err(DeactivateCounterV1Error::CounterMustBeOwnedByProgram);
         }
 
         if system_program.key() != &pinocchio_system::ID {
-            return Err(CounterError::SystemProgramAddressMismatch);
+            return Err(DeactivateCounterV1Error::SystemProgramAddressMismatch);
         }
 
         Ok(Self {
@@ -127,5 +143,26 @@ impl<'a> TryFrom<(&Pubkey, &'a [AccountInfo])> for DeactivateCounterV1Accounts<'
             counter_bump,
             system_program,
         })
+    }
+}
+
+impl From<DeactivateCounterV1Error> for CounterError {
+    fn from(err: DeactivateCounterV1Error) -> Self {
+        match err {
+            DeactivateCounterV1Error::ProgramError(pe) => CounterError::ProgramError(pe),
+            _ => CounterError::DeactivateCounterV1(err),
+        }
+    }
+}
+
+impl From<ProgramError> for DeactivateCounterV1Error {
+    fn from(err: ProgramError) -> Self {
+        DeactivateCounterV1Error::ProgramError(err)
+    }
+}
+
+impl From<ReadError> for DeactivateCounterV1Error {
+    fn from(_: ReadError) -> Self {
+        Self::DeserializeError
     }
 }

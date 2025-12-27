@@ -250,7 +250,7 @@ mod tests {
         assert_eq!(instruction.accounts[1].pubkey, expected_counter);
         assert_eq!(
             instruction.data[0],
-            InstructionDiscriminator::SetCountV1 as u8
+            u8::from(InstructionDiscriminator::SetCountV1)
         );
 
         // Verify the count is serialized correctly
@@ -293,7 +293,7 @@ mod tests {
         assert_eq!(instruction.accounts.len(), 2);
         assert_eq!(
             instruction.data[0],
-            InstructionDiscriminator::SetCountV1 as u8
+            u8::from(InstructionDiscriminator::SetCountV1)
         );
     }
 

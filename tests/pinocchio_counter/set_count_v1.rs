@@ -142,7 +142,7 @@ fn fails_when_owner_not_signer() -> TestResult {
 
     let tx_result = ctx.send_transaction(malicious_tx);
     demand_tx_failure(&tx_result);
-    demand_logs_contain("failed: custom program error: 0xe", &tx_result);
+    demand_logs_contain("failed: custom program error: 0x502", &tx_result);
 
     Ok(())
 }
@@ -177,7 +177,7 @@ fn fails_when_counter_not_writable() -> TestResult {
 
     let tx_result = ctx.send_transaction(malicious_tx);
     demand_tx_failure(&tx_result);
-    demand_logs_contain("failed: custom program error: 0x4", &tx_result);
+    demand_logs_contain("failed: custom program error: 0x504", &tx_result);
 
     Ok(())
 }
@@ -212,7 +212,7 @@ fn fails_when_counter_address_mismatch() -> TestResult {
 
     let tx_result = ctx.send_transaction(malicious_tx);
     demand_tx_failure(&tx_result);
-    demand_logs_contain("failed: custom program error: 0x1", &tx_result);
+    demand_logs_contain("failed: custom program error: 0x505", &tx_result);
 
     Ok(())
 }
@@ -254,7 +254,7 @@ fn fails_when_owner_mismatch() -> TestResult {
 
     let tx_result = ctx.send_transaction(malicious_tx);
     demand_tx_failure(&tx_result);
-    demand_logs_contain("failed: custom program error: 0x1", &tx_result);
+    demand_logs_contain("failed: custom program error: 0x505", &tx_result);
 
     Ok(())
 }
@@ -294,7 +294,7 @@ fn fails_when_not_enough_accounts() -> TestResult {
 
     let tx_result = ctx.send_transaction(malicious_tx);
     demand_tx_failure(&tx_result);
-    demand_logs_contain("failed: custom program error: 0x7", &tx_result);
+    demand_logs_contain("failed: custom program error: 0x501", &tx_result);
 
     Ok(())
 }

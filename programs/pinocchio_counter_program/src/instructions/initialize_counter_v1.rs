@@ -1,9 +1,11 @@
 use {
     crate::{find_counter_address, CounterError, CounterV1, COUNTER_SEED},
     pinocchio::{
-        account_info::AccountInfo, instruction::Signer, pubkey::Pubkey, seeds, ProgramResult,
+        account_info::AccountInfo, instruction::Signer, program_error::ProgramError,
+        pubkey::Pubkey, seeds,
     },
     pinocchio_system::create_account_with_minimum_balance_signed,
+    wincode::{ReadError, WriteError},
 };
 
 pub struct InitializeCounterV1<'a> {
@@ -18,6 +20,22 @@ pub struct InitializeCounterV1Accounts<'a> {
     pub system_program: &'a AccountInfo,
 }
 
+#[derive(Debug, PartialEq)]
+pub enum InitializeCounterV1Error {
+    ProgramError(ProgramError),
+    NotEnoughAccounts { expected: usize, observed: usize },
+    PayerMustBeSigner,
+    CounterMustBeWriteable,
+    CounterAddressMismatch,
+    CounterMustBeEmpty,
+    CounterMustHaveZeroLamports,
+    CounterMustBeOwnedBySystemProgram,
+    SystemProgramAddressMismatch,
+    DeserializeError,
+    SerializeError,
+    SerializedSizeMismatch { expected: usize, observed: usize },
+}
+
 impl InitializeCounterV1<'_> {
     /// Executes the initialize counter instruction.
     ///
@@ -25,8 +43,8 @@ impl InitializeCounterV1<'_> {
     ///
     /// # Errors
     ///
-    /// Returns a [`ProgramResult`] containing a [`CounterError`] if execution fails.
-    pub fn execute(&self) -> ProgramResult {
+    /// Returns a [`Result`] containing a [`InitializeCounterV1Error`] if execution fails.
+    pub fn execute(&self) -> Result<(), InitializeCounterV1Error> {
         let owner = self.accounts.payer.key();
         let owner_ref = owner.as_ref();
         let bump_ref = &[self.accounts.counter_bump];
@@ -48,16 +66,13 @@ impl InitializeCounterV1<'_> {
             ..Default::default()
         };
 
-        let serialized = state
-            .serialize()
-            .map_err(|_| CounterError::SerializeError)?;
+        let serialized = state.serialize()?;
 
         if serialized.len() != CounterV1::size() {
-            let counter_error = CounterError::SerializedSizeMismatch {
+            return Err(InitializeCounterV1Error::SerializedSizeMismatch {
                 expected: CounterV1::size(),
                 observed: serialized.len(),
-            };
-            return Err(counter_error.into());
+            });
         }
 
         self.accounts
@@ -70,7 +85,7 @@ impl InitializeCounterV1<'_> {
 }
 
 impl<'a> TryFrom<(&'a Pubkey, &'a [AccountInfo], &[u8])> for InitializeCounterV1<'a> {
-    type Error = CounterError;
+    type Error = InitializeCounterV1Error;
 
     fn try_from(
         (program_id, accounts, _args): (&'a Pubkey, &'a [AccountInfo], &[u8]),
@@ -84,44 +99,44 @@ impl<'a> TryFrom<(&'a Pubkey, &'a [AccountInfo], &[u8])> for InitializeCounterV1
 }
 
 impl<'a> TryFrom<(&Pubkey, &'a [AccountInfo])> for InitializeCounterV1Accounts<'a> {
-    type Error = CounterError;
+    type Error = InitializeCounterV1Error;
 
     fn try_from((program_id, accounts): (&Pubkey, &'a [AccountInfo])) -> Result<Self, Self::Error> {
         let [payer, counter, system_program] = accounts else {
-            return Err(CounterError::NotEnoughAccounts {
+            return Err(InitializeCounterV1Error::NotEnoughAccounts {
                 expected: 3,
                 observed: accounts.len(),
             });
         };
 
         if !payer.is_signer() {
-            return Err(CounterError::PayerMustBeSigner);
+            return Err(InitializeCounterV1Error::PayerMustBeSigner);
         }
 
         let (counter_address, counter_bump) = find_counter_address(program_id, payer.key());
 
         if !counter.is_writable() {
-            return Err(CounterError::CounterMustBeWriteable);
+            return Err(InitializeCounterV1Error::CounterMustBeWriteable);
         }
 
         if counter.key() != &counter_address {
-            return Err(CounterError::CounterAddressMismatch);
+            return Err(InitializeCounterV1Error::CounterAddressMismatch);
         }
 
         if !counter.data_is_empty() {
-            return Err(CounterError::CounterMustBeEmpty);
+            return Err(InitializeCounterV1Error::CounterMustBeEmpty);
         }
 
         if counter.lamports() > 0 {
-            return Err(CounterError::CounterMustHaveZeroLamports);
+            return Err(InitializeCounterV1Error::CounterMustHaveZeroLamports);
         }
 
         if !counter.is_owned_by(&pinocchio_system::ID) {
-            return Err(CounterError::CounterMustBeOwnedBySystemProgram);
+            return Err(InitializeCounterV1Error::CounterMustBeOwnedBySystemProgram);
         }
 
         if system_program.key() != &pinocchio_system::ID {
-            return Err(CounterError::SystemProgramAddressMismatch);
+            return Err(InitializeCounterV1Error::SystemProgramAddressMismatch);
         }
 
         Ok(Self {
@@ -130,5 +145,32 @@ impl<'a> TryFrom<(&Pubkey, &'a [AccountInfo])> for InitializeCounterV1Accounts<'
             counter_bump,
             system_program,
         })
+    }
+}
+
+impl From<InitializeCounterV1Error> for CounterError {
+    fn from(err: InitializeCounterV1Error) -> Self {
+        match err {
+            InitializeCounterV1Error::ProgramError(pe) => CounterError::ProgramError(pe),
+            _ => CounterError::InitializeCounterV1(err),
+        }
+    }
+}
+
+impl From<ProgramError> for InitializeCounterV1Error {
+    fn from(err: ProgramError) -> Self {
+        InitializeCounterV1Error::ProgramError(err)
+    }
+}
+
+impl From<ReadError> for InitializeCounterV1Error {
+    fn from(_: ReadError) -> Self {
+        Self::DeserializeError
+    }
+}
+
+impl From<WriteError> for InitializeCounterV1Error {
+    fn from(_: WriteError) -> Self {
+        Self::SerializeError
     }
 }

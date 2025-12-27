@@ -23,7 +23,7 @@ impl InstructionDiscriminator {
     pub fn parse(instruction_data: &[u8]) -> CounterResult<(Self, &[u8])> {
         let (first, rest) = instruction_data
             .split_first()
-            .ok_or(CounterError::InvalidInstructionDiscriminator(0))?;
+            .ok_or(CounterError::EmptyInstructionData)?;
         Ok((Self::try_from(first)?, rest))
     }
 }
@@ -93,15 +93,12 @@ mod tests {
         let result = InstructionDiscriminator::parse(&[]);
 
         assert!(result.is_err());
-        assert_eq!(
-            result.unwrap_err(),
-            CounterError::InvalidInstructionDiscriminator(0)
-        );
+        assert_eq!(result.unwrap_err(), CounterError::EmptyInstructionData);
     }
 
     #[test]
     fn test_parse_invalid_discriminator() {
-        let invalid_discriminators = [0u8, 6u8, 255u8];
+        let invalid_discriminators = [6u8, 255u8];
 
         for invalid_byte in invalid_discriminators {
             let instruction_data = [invalid_byte, 0x42];

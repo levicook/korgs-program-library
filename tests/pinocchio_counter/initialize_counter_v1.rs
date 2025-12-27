@@ -45,9 +45,9 @@ fn succeeds() -> TestResult {
 
     assert_eq!(
         counter.discriminator,
-        AccountDiscriminator::CounterV1,
+        AccountDiscriminator::CounterV1Account,
         "Discriminator mismatch expected {expected:?}, observed {observed:?}",
-        expected = AccountDiscriminator::CounterV1,
+        expected = AccountDiscriminator::CounterV1Account,
         observed = counter.discriminator
     );
 
@@ -96,7 +96,7 @@ fn fails_when_payer_not_signer() -> TestResult {
     let tx_result = ctx.send_transaction(malicious_tx);
 
     demand_tx_failure(&tx_result);
-    demand_logs_contain("failed: custom program error: 0x8", &tx_result);
+    demand_logs_contain("failed: custom program error: 0x102", &tx_result);
 
     Ok(())
 }
@@ -116,7 +116,7 @@ fn fails_when_counter_not_writable() -> TestResult {
 
     let tx_result = ctx.send_transaction(malicious_tx);
     demand_tx_failure(&tx_result);
-    demand_logs_contain("failed: custom program error: 0x4", &tx_result);
+    demand_logs_contain("failed: custom program error: 0x103", &tx_result);
 
     Ok(())
 }
@@ -136,7 +136,7 @@ fn fails_when_counter_address_mismatch() -> TestResult {
 
     let tx_result = ctx.send_transaction(malicious_tx);
     demand_tx_failure(&tx_result);
-    demand_logs_contain("failed: custom program error: 0x1", &tx_result);
+    demand_logs_contain("failed: custom program error: 0x104", &tx_result);
 
     Ok(())
 }
@@ -156,7 +156,7 @@ fn fails_when_system_program_address_mismatch() -> TestResult {
 
     let tx_result = ctx.send_transaction(malicious_tx);
     demand_tx_failure(&tx_result);
-    demand_logs_contain("failed: custom program error: 0xb", &tx_result);
+    demand_logs_contain("failed: custom program error: 0x108", &tx_result);
 
     Ok(())
 }
@@ -187,7 +187,7 @@ fn fails_when_counter_has_pre_existing_data() -> TestResult {
 
     let tx_result2 = ctx.send_transaction(init_counter_tx2);
     demand_tx_failure(&tx_result2);
-    demand_logs_contain("failed: custom program error: 0x2", &tx_result2);
+    demand_logs_contain("failed: custom program error: 0x105", &tx_result2);
 
     Ok(())
 }
@@ -207,7 +207,7 @@ fn fails_with_invalid_instruction_discriminator() -> TestResult {
 
     let tx_result = ctx.send_transaction(malicious_tx);
     demand_tx_failure(&tx_result);
-    demand_logs_contain("failed: custom program error: 0x6", &tx_result);
+    demand_logs_contain("failed: custom program error: 0x2", &tx_result);
 
     Ok(())
 }
@@ -227,7 +227,7 @@ fn fails_with_empty_instruction_data() -> TestResult {
 
     let tx_result = ctx.send_transaction(malicious_tx);
     demand_tx_failure(&tx_result);
-    demand_logs_contain("failed: custom program error: 0x6", &tx_result);
+    demand_logs_contain("failed: custom program error: 0x1", &tx_result);
 
     Ok(())
 }
@@ -265,7 +265,7 @@ fn fails_when_not_enough_accounts() -> TestResult {
 
     let tx_result = ctx.send_transaction(malicious_tx);
     demand_tx_failure(&tx_result);
-    demand_logs_contain("failed: custom program error: 0x7", &tx_result);
+    demand_logs_contain("failed: custom program error: 0x101", &tx_result);
 
     Ok(())
 }

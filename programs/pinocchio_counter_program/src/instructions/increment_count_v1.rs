@@ -1,6 +1,7 @@
 use {
     crate::{find_counter_address, AccountDiscriminator, CounterError, CounterV1},
-    pinocchio::{account_info::AccountInfo, pubkey::Pubkey, ProgramResult},
+    pinocchio::{account_info::AccountInfo, program_error::ProgramError, pubkey::Pubkey},
+    wincode::{ReadError, WriteError},
 };
 
 pub struct IncrementCountV1<'a> {
@@ -14,6 +15,21 @@ pub struct IncrementCountV1Accounts<'a> {
     pub counter_bump: u8,
 }
 
+#[derive(Debug, PartialEq)]
+pub enum IncrementCountV1Error {
+    ProgramError(ProgramError),
+    NotEnoughAccounts { expected: usize, observed: usize },
+    OwnerMustBeSigner,
+    OwnerMustBeWritable,
+    CounterMustBeWriteable,
+    CounterAddressMismatch,
+    CounterMustBeOwnedByProgram,
+    DeserializeError,
+    SerializeError,
+    OwnerMismatch,
+    SerializedSizeMismatch { expected: usize, observed: usize },
+}
+
 impl IncrementCountV1<'_> {
     /// Executes the increment count instruction.
     ///
@@ -21,33 +37,30 @@ impl IncrementCountV1<'_> {
     ///
     /// # Errors
     ///
-    /// Returns a [`ProgramResult`] containing a [`CounterError`] if execution fails.
-    pub fn execute(&self) -> ProgramResult {
+    /// Returns a [`Result`] containing a [`IncrementCountV1Error`] if execution fails.
+    pub fn execute(&self) -> Result<(), IncrementCountV1Error> {
         let mut counter_state = {
             let counter_data = self.accounts.counter.try_borrow_data()?;
-            CounterV1::deserialize(&counter_data).map_err(|_| CounterError::SerializeError)?
+            CounterV1::deserialize(&counter_data)?
         };
 
-        if counter_state.discriminator != AccountDiscriminator::CounterV1 {
-            return Err(CounterError::SerializeError.into());
+        if counter_state.discriminator != AccountDiscriminator::CounterV1Account {
+            return Err(IncrementCountV1Error::DeserializeError);
         }
 
         if counter_state.owner != *self.accounts.owner.key() {
-            return Err(CounterError::OwnerMismatch.into());
+            return Err(IncrementCountV1Error::OwnerMismatch);
         }
 
         counter_state.count = counter_state.count.saturating_add(1);
 
-        let serialized = counter_state
-            .serialize()
-            .map_err(|_| CounterError::SerializeError)?;
+        let serialized = counter_state.serialize()?;
 
         if serialized.len() != CounterV1::size() {
-            let counter_error = CounterError::SerializedSizeMismatch {
+            return Err(IncrementCountV1Error::SerializedSizeMismatch {
                 expected: CounterV1::size(),
                 observed: serialized.len(),
-            };
-            return Err(counter_error.into());
+            });
         }
 
         self.accounts
@@ -60,7 +73,7 @@ impl IncrementCountV1<'_> {
 }
 
 impl<'a> TryFrom<(&'a Pubkey, &'a [AccountInfo], &[u8])> for IncrementCountV1<'a> {
-    type Error = CounterError;
+    type Error = IncrementCountV1Error;
 
     fn try_from(
         (program_id, accounts, _args): (&'a Pubkey, &'a [AccountInfo], &[u8]),
@@ -74,36 +87,36 @@ impl<'a> TryFrom<(&'a Pubkey, &'a [AccountInfo], &[u8])> for IncrementCountV1<'a
 }
 
 impl<'a> TryFrom<(&Pubkey, &'a [AccountInfo])> for IncrementCountV1Accounts<'a> {
-    type Error = CounterError;
+    type Error = IncrementCountV1Error;
 
     fn try_from((program_id, accounts): (&Pubkey, &'a [AccountInfo])) -> Result<Self, Self::Error> {
         let [owner, counter] = accounts else {
-            return Err(CounterError::NotEnoughAccounts {
+            return Err(IncrementCountV1Error::NotEnoughAccounts {
                 expected: 2,
                 observed: accounts.len(),
             });
         };
 
         if !owner.is_signer() {
-            return Err(CounterError::OwnerMustBeSigner);
+            return Err(IncrementCountV1Error::OwnerMustBeSigner);
         }
 
         if !owner.is_writable() {
-            return Err(CounterError::OwnerMustBeWritable);
+            return Err(IncrementCountV1Error::OwnerMustBeWritable);
         }
 
         let (counter_address, counter_bump) = find_counter_address(program_id, owner.key());
 
         if !counter.is_writable() {
-            return Err(CounterError::CounterMustBeWriteable);
+            return Err(IncrementCountV1Error::CounterMustBeWriteable);
         }
 
         if counter.key() != &counter_address {
-            return Err(CounterError::CounterAddressMismatch);
+            return Err(IncrementCountV1Error::CounterAddressMismatch);
         }
 
         if !counter.is_owned_by(program_id) {
-            return Err(CounterError::CounterMustBeOwnedByProgram);
+            return Err(IncrementCountV1Error::CounterMustBeOwnedByProgram);
         }
 
         Ok(Self {
@@ -111,5 +124,32 @@ impl<'a> TryFrom<(&Pubkey, &'a [AccountInfo])> for IncrementCountV1Accounts<'a> 
             counter,
             counter_bump,
         })
+    }
+}
+
+impl From<IncrementCountV1Error> for CounterError {
+    fn from(err: IncrementCountV1Error) -> Self {
+        match err {
+            IncrementCountV1Error::ProgramError(pe) => CounterError::ProgramError(pe),
+            _ => CounterError::IncrementCountV1(err),
+        }
+    }
+}
+
+impl From<ProgramError> for IncrementCountV1Error {
+    fn from(err: ProgramError) -> Self {
+        IncrementCountV1Error::ProgramError(err)
+    }
+}
+
+impl From<ReadError> for IncrementCountV1Error {
+    fn from(_: ReadError) -> Self {
+        Self::DeserializeError
+    }
+}
+
+impl From<WriteError> for IncrementCountV1Error {
+    fn from(_: WriteError) -> Self {
+        Self::SerializeError
     }
 }

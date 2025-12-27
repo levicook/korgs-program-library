@@ -68,9 +68,9 @@ fn succeeds() -> TestResult {
 
     assert_eq!(
         counter_account_after.data[0],
-        AccountDiscriminator::DeactivatedAccount as u8,
+        u8::from(AccountDiscriminator::DeactivatedAccount),
         "Discriminator mismatch expected {expected:?}, observed {observed:?}",
-        expected = AccountDiscriminator::DeactivatedAccount as u8,
+        expected = u8::from(AccountDiscriminator::DeactivatedAccount),
         observed = counter_account_after.data[0]
     );
 
@@ -133,7 +133,7 @@ fn fails_when_owner_not_signer() -> TestResult {
 
     let tx_result = ctx.send_transaction(malicious_tx);
     demand_tx_failure(&tx_result);
-    demand_logs_contain("failed: custom program error: 0xe", &tx_result);
+    demand_logs_contain("failed: custom program error: 0x202", &tx_result);
 
     Ok(())
 }
@@ -164,7 +164,7 @@ fn fails_when_counter_not_writable() -> TestResult {
 
     let tx_result = ctx.send_transaction(malicious_tx);
     demand_tx_failure(&tx_result);
-    demand_logs_contain("failed: custom program error: 0x4", &tx_result);
+    demand_logs_contain("failed: custom program error: 0x204", &tx_result);
 
     Ok(())
 }
@@ -195,7 +195,7 @@ fn fails_when_counter_address_mismatch() -> TestResult {
 
     let tx_result = ctx.send_transaction(malicious_tx);
     demand_tx_failure(&tx_result);
-    demand_logs_contain("failed: custom program error: 0x1", &tx_result);
+    demand_logs_contain("failed: custom program error: 0x205", &tx_result);
 
     Ok(())
 }
@@ -219,10 +219,10 @@ fn fails_when_owner_mismatch() -> TestResult {
     ctx.advance_slot(1)?;
 
     // Try to deactivate with different owner
-    // This will fail at address validation (0x1) because the counter address
+    // This will fail at address validation (0x205 = CounterAddressMismatch) because the counter address
     // is derived from the owner, so using a different owner means the address won't match.
     // This is actually a good security property - address validation prevents
-    // owner mismatch attacks. The stored owner check (0xd) would only be reached
+    // owner mismatch attacks. The stored owner check would only be reached
     // if address validation passed, which requires using the correct owner.
     let malicious_tx = MaliciousDeactivateCounterV1Tx::from_valid(
         ctx.program_id(),
@@ -239,7 +239,7 @@ fn fails_when_owner_mismatch() -> TestResult {
     let tx_result = ctx.send_transaction(malicious_tx);
     demand_tx_failure(&tx_result);
     // Address validation fails first, which is the expected security behavior
-    demand_logs_contain("failed: custom program error: 0x1", &tx_result);
+    demand_logs_contain("failed: custom program error: 0x205", &tx_result);
 
     Ok(())
 }
@@ -288,7 +288,7 @@ fn fails_when_not_enough_accounts() -> TestResult {
 
     let tx_result = ctx.send_transaction(malicious_tx);
     demand_tx_failure(&tx_result);
-    demand_logs_contain("failed: custom program error: 0x7", &tx_result);
+    demand_logs_contain("failed: custom program error: 0x201", &tx_result);
 
     Ok(())
 }
@@ -319,7 +319,7 @@ fn fails_with_invalid_instruction_discriminator() -> TestResult {
 
     let tx_result = ctx.send_transaction(malicious_tx);
     demand_tx_failure(&tx_result);
-    demand_logs_contain("failed: custom program error: 0x6", &tx_result);
+    demand_logs_contain("failed: custom program error: 0x2", &tx_result);
 
     Ok(())
 }
@@ -350,7 +350,7 @@ fn fails_with_empty_instruction_data() -> TestResult {
 
     let tx_result = ctx.send_transaction(malicious_tx);
     demand_tx_failure(&tx_result);
-    demand_logs_contain("failed: custom program error: 0x6", &tx_result);
+    demand_logs_contain("failed: custom program error: 0x1", &tx_result);
 
     Ok(())
 }

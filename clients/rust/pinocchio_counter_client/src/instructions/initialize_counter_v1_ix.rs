@@ -301,7 +301,7 @@ mod tests {
         assert_eq!(instruction.accounts[2].pubkey, solana_system_program::id());
         assert_eq!(
             instruction.data,
-            vec![InstructionDiscriminator::InitializeCounterV1 as u8]
+            vec![u8::from(InstructionDiscriminator::InitializeCounterV1)]
         );
     }
 
@@ -337,7 +337,7 @@ mod tests {
         assert_eq!(instruction.accounts[2].pubkey, solana_system_program::id());
         assert_eq!(
             instruction.data,
-            vec![InstructionDiscriminator::InitializeCounterV1 as u8]
+            vec![u8::from(InstructionDiscriminator::InitializeCounterV1)]
         );
     }
 
@@ -353,7 +353,7 @@ mod tests {
         assert_eq!(instruction.accounts.len(), 3);
         assert_eq!(
             instruction.data,
-            vec![InstructionDiscriminator::InitializeCounterV1 as u8]
+            vec![u8::from(InstructionDiscriminator::InitializeCounterV1)]
         );
     }
 

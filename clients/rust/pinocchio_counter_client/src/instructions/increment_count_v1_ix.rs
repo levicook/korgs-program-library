@@ -226,7 +226,7 @@ mod tests {
         assert_eq!(instruction.accounts[1].pubkey, expected_counter);
         assert_eq!(
             instruction.data,
-            vec![InstructionDiscriminator::IncrementCountV1 as u8]
+            vec![u8::from(InstructionDiscriminator::IncrementCountV1)]
         );
     }
 
@@ -265,7 +265,7 @@ mod tests {
         assert_eq!(instruction.accounts.len(), 2);
         assert_eq!(
             instruction.data,
-            vec![InstructionDiscriminator::IncrementCountV1 as u8]
+            vec![u8::from(InstructionDiscriminator::IncrementCountV1)]
         );
     }
 

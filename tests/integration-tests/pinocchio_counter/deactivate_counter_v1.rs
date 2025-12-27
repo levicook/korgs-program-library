@@ -201,7 +201,7 @@ fn fails_when_counter_address_mismatch() -> TestResult {
 }
 
 #[test]
-fn fails_when_owner_mismatch() -> TestResult {
+fn fails_when_owner_mismatch_address_validation() -> TestResult {
     let mut ctx = TestContext::try_new()?;
     let owner_kp = ctx.create_funded_keypair();
     let owner_pk = owner_kp.pubkey();

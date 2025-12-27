@@ -215,7 +215,7 @@ fn fails_when_counter_address_mismatch() -> TestResult {
 }
 
 #[test]
-fn fails_when_owner_mismatch() -> TestResult {
+fn fails_when_owner_mismatch_address_validation() -> TestResult {
     let mut ctx = TestContext::try_new()?;
     let owner_kp = ctx.create_funded_keypair();
     let owner_pk = owner_kp.pubkey();
@@ -234,7 +234,7 @@ fn fails_when_owner_mismatch() -> TestResult {
     ctx.advance_slot(1)?;
 
     // Try to decrement with different owner
-    // This will fail at address validation (0x1) because the counter address
+    // This will fail at address validation (0x405 = CounterAddressMismatch) because the counter address
     // is derived from the owner, so using a different owner means the address won't match.
     let malicious_tx = MaliciousDecrementCountV1Tx::from_valid(
         ctx.program_id(),

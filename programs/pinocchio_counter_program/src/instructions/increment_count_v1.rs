@@ -20,11 +20,10 @@ pub enum IncrementCountV1Error {
     NotEnoughAccounts { expected: usize, observed: usize },
     OwnerMustBeSigner,
     CounterMustBeWriteable,
-    CounterAddressMismatch,
+    CounterAddressMismatch { expected: Pubkey, observed: Pubkey },
     CounterMustBeOwnedByProgram,
     DeserializeError(ReadError),
     SerializeError(WriteError),
-    OwnerMismatch,
     SerializedSizeMismatch { expected: usize, observed: usize },
     AccountDiscriminatorError(AccountDiscriminatorError),
 }
@@ -43,10 +42,6 @@ impl IncrementCountV1<'_> {
             let counter_data = self.accounts.counter.try_borrow_data()?;
             CounterV1::deserialize(&counter_data)?
         };
-
-        if counter_state.owner != *self.accounts.owner.key() {
-            return Err(IncrementCountV1Error::OwnerMismatch);
-        }
 
         counter_state.count = counter_state.count.saturating_add(1);
 
@@ -97,14 +92,17 @@ impl<'a> TryFrom<(&Pubkey, &'a [AccountInfo])> for IncrementCountV1Accounts<'a> 
             return Err(IncrementCountV1Error::OwnerMustBeSigner);
         }
 
-        let (counter_address, _bump) = find_counter_address(program_id, owner.key());
-
         if !counter.is_writable() {
             return Err(IncrementCountV1Error::CounterMustBeWriteable);
         }
 
-        if counter.key() != &counter_address {
-            return Err(IncrementCountV1Error::CounterAddressMismatch);
+        let (expected_counter, _bump) = find_counter_address(program_id, owner.key());
+        let observed_counter = counter.key();
+        if observed_counter != &expected_counter {
+            return Err(IncrementCountV1Error::CounterAddressMismatch {
+                expected: expected_counter,
+                observed: *observed_counter,
+            });
         }
 
         if !counter.is_owned_by(program_id) {

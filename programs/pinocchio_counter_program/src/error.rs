@@ -61,12 +61,12 @@ impl From<InstructionError> for ProgramError {
                         DeactivateCounterV1Error::OwnerMustBeSigner => 0x02,
                         DeactivateCounterV1Error::OwnerMustBeWriteable => 0x03,
                         DeactivateCounterV1Error::CounterMustBeWriteable => 0x04,
-                        DeactivateCounterV1Error::CounterAddressMismatch => 0x05,
+                        DeactivateCounterV1Error::CounterAddressMismatch { .. } => 0x05,
                         DeactivateCounterV1Error::CounterMustBeOwnedByProgram => 0x06,
                         // 0x07 reserved to maintain existing error code mappings
                         DeactivateCounterV1Error::DeserializeError(_) => 0x08,
                         // 0x09 reserved to maintain existing error code mappings
-                        DeactivateCounterV1Error::OwnerMismatch => 0x0a,
+                        // 0x0a reserved (retired: OwnerMismatch - redundant with address validation)
                         DeactivateCounterV1Error::AccountDiscriminatorError(_) => 0x0b,
                         DeactivateCounterV1Error::ProgramError(_) => {
                             unreachable!(
@@ -82,11 +82,11 @@ impl From<InstructionError> for ProgramError {
                         IncrementCountV1Error::OwnerMustBeSigner => 0x02,
                         // 0x03 reserved to maintain existing error code mappings
                         IncrementCountV1Error::CounterMustBeWriteable => 0x04,
-                        IncrementCountV1Error::CounterAddressMismatch => 0x05,
+                        IncrementCountV1Error::CounterAddressMismatch { .. } => 0x05,
                         IncrementCountV1Error::CounterMustBeOwnedByProgram => 0x06,
                         IncrementCountV1Error::DeserializeError(_) => 0x07,
                         IncrementCountV1Error::SerializeError(_) => 0x08,
-                        IncrementCountV1Error::OwnerMismatch => 0x09,
+                        // 0x09 reserved (retired: OwnerMismatch - redundant with address validation)
                         IncrementCountV1Error::SerializedSizeMismatch { .. } => 0x0a,
                         IncrementCountV1Error::AccountDiscriminatorError(_) => 0x0b,
                         IncrementCountV1Error::ProgramError(_) => {
@@ -103,11 +103,11 @@ impl From<InstructionError> for ProgramError {
                         DecrementCountV1Error::OwnerMustBeSigner => 0x02,
                         // 0x03 reserved to maintain existing error code mappings
                         DecrementCountV1Error::CounterMustBeWriteable => 0x04,
-                        DecrementCountV1Error::CounterAddressMismatch => 0x05,
+                        DecrementCountV1Error::CounterAddressMismatch { .. } => 0x05,
                         DecrementCountV1Error::CounterMustBeOwnedByProgram => 0x06,
                         DecrementCountV1Error::DeserializeError(_) => 0x07,
                         DecrementCountV1Error::SerializeError(_) => 0x08,
-                        DecrementCountV1Error::OwnerMismatch => 0x09,
+                        // 0x09 reserved (retired: OwnerMismatch - redundant with address validation)
                         DecrementCountV1Error::SerializedSizeMismatch { .. } => 0x0a,
                         DecrementCountV1Error::AccountDiscriminatorError(_) => 0x0b,
                         DecrementCountV1Error::ProgramError(_) => {
@@ -124,11 +124,11 @@ impl From<InstructionError> for ProgramError {
                         SetCountV1Error::OwnerMustBeSigner => 0x02,
                         // 0x03 reserved to maintain existing error code mappings
                         SetCountV1Error::CounterMustBeWriteable => 0x04,
-                        SetCountV1Error::CounterAddressMismatch => 0x05,
+                        SetCountV1Error::CounterAddressMismatch { .. } => 0x05,
                         SetCountV1Error::CounterMustBeOwnedByProgram => 0x06,
                         SetCountV1Error::DeserializeError(_) => 0x07,
                         SetCountV1Error::SerializeError(_) => 0x08,
-                        SetCountV1Error::OwnerMismatch => 0x09,
+                        // 0x09 reserved (retired: OwnerMismatch - redundant with address validation)
                         SetCountV1Error::SerializedSizeMismatch { .. } => 0x0a,
                         SetCountV1Error::AccountDiscriminatorError(_) => 0x0b,
                         SetCountV1Error::ProgramError(_) => {
@@ -327,7 +327,10 @@ mod tests {
             (
                 0x205,
                 InstructionError::DeactivateCounterV1(
-                    DeactivateCounterV1Error::CounterAddressMismatch,
+                    DeactivateCounterV1Error::CounterAddressMismatch {
+                        expected: Default::default(),
+                        observed: Default::default(),
+                    },
                 ),
             ),
             (
@@ -344,10 +347,7 @@ mod tests {
                 )),
             ),
             // 0x209 reserved (retired)
-            (
-                0x20a,
-                InstructionError::DeactivateCounterV1(DeactivateCounterV1Error::OwnerMismatch),
-            ),
+            // 0x20a reserved (retired: OwnerMismatch - redundant with address validation)
             (
                 0x20b,
                 InstructionError::DeactivateCounterV1(
@@ -378,7 +378,10 @@ mod tests {
             ),
             (
                 0x305,
-                InstructionError::IncrementCountV1(IncrementCountV1Error::CounterAddressMismatch),
+                InstructionError::IncrementCountV1(IncrementCountV1Error::CounterAddressMismatch {
+                    expected: Default::default(),
+                    observed: Default::default(),
+                }),
             ),
             (
                 0x306,
@@ -398,10 +401,7 @@ mod tests {
                     WriteError::Custom("test"),
                 )),
             ),
-            (
-                0x309,
-                InstructionError::IncrementCountV1(IncrementCountV1Error::OwnerMismatch),
-            ),
+            // 0x309 reserved (retired: OwnerMismatch - redundant with address validation)
             (
                 0x30a,
                 InstructionError::IncrementCountV1(IncrementCountV1Error::SerializedSizeMismatch {
@@ -442,7 +442,10 @@ mod tests {
             ),
             (
                 0x405,
-                InstructionError::DecrementCountV1(DecrementCountV1Error::CounterAddressMismatch),
+                InstructionError::DecrementCountV1(DecrementCountV1Error::CounterAddressMismatch {
+                    expected: Default::default(),
+                    observed: Default::default(),
+                }),
             ),
             (
                 0x406,
@@ -462,10 +465,7 @@ mod tests {
                     WriteError::Custom("test"),
                 )),
             ),
-            (
-                0x409,
-                InstructionError::DecrementCountV1(DecrementCountV1Error::OwnerMismatch),
-            ),
+            // 0x409 reserved (retired: OwnerMismatch - redundant with address validation)
             (
                 0x40a,
                 InstructionError::DecrementCountV1(DecrementCountV1Error::SerializedSizeMismatch {
@@ -503,7 +503,10 @@ mod tests {
             ),
             (
                 0x505,
-                InstructionError::SetCountV1(SetCountV1Error::CounterAddressMismatch),
+                InstructionError::SetCountV1(SetCountV1Error::CounterAddressMismatch {
+                    expected: Default::default(),
+                    observed: Default::default(),
+                }),
             ),
             (
                 0x506,
@@ -521,10 +524,7 @@ mod tests {
                     "test",
                 ))),
             ),
-            (
-                0x509,
-                InstructionError::SetCountV1(SetCountV1Error::OwnerMismatch),
-            ),
+            // 0x509 reserved (retired: OwnerMismatch - redundant with address validation)
             (
                 0x50a,
                 InstructionError::SetCountV1(SetCountV1Error::SerializedSizeMismatch {

@@ -1,6 +1,6 @@
 use {
     crate::{
-        find_counter_address, AccountDiscriminator, AccountDiscriminatorError, CounterV1,
+        find_counter_address, AccountDiscriminator, AccountDiscriminatorError,
         DEACTIVATED_ACCOUNT_SIZE,
     },
     pinocchio::{
@@ -30,10 +30,9 @@ pub enum DeactivateCounterV1Error {
     OwnerMustBeSigner,
     OwnerMustBeWriteable,
     CounterMustBeWriteable,
-    CounterAddressMismatch,
+    CounterAddressMismatch { expected: Pubkey, observed: Pubkey },
     CounterMustBeOwnedByProgram,
     DeserializeError(ReadError),
-    OwnerMismatch,
     AccountDiscriminatorError(AccountDiscriminatorError),
 }
 
@@ -42,7 +41,6 @@ impl DeactivateCounterV1<'_> {
     ///
     /// Deactivates a counter account by:
     /// - Verifying the account discriminator is `CounterV1Account`
-    /// - Verifying the owner matches the counter's stored owner
     /// - Marking the account as deactivated with the `DeactivatedAccount` discriminator
     /// - Resizing the account to 1 byte (discriminator only)
     /// - Transferring all non-rent-exempt lamports to the owner
@@ -54,15 +52,6 @@ impl DeactivateCounterV1<'_> {
     ///
     /// Returns a [`Result`] containing a [`DeactivateCounterV1Error`] if execution fails.
     pub fn execute(&self) -> Result<(), DeactivateCounterV1Error> {
-        let counter_state = {
-            let counter_data = self.accounts.counter.try_borrow_data()?;
-            CounterV1::deserialize(&counter_data)?
-        };
-
-        if counter_state.owner != *self.accounts.owner.key() {
-            return Err(DeactivateCounterV1Error::OwnerMismatch);
-        }
-
         {
             let mut data = self.accounts.counter.try_borrow_mut_data()?;
             data[0] = u8::from(AccountDiscriminator::DeactivatedAccount);
@@ -118,14 +107,17 @@ impl<'a> TryFrom<(&Pubkey, &'a [AccountInfo])> for DeactivateCounterV1Accounts<'
             return Err(DeactivateCounterV1Error::OwnerMustBeWriteable);
         }
 
-        let (counter_address, counter_bump) = find_counter_address(program_id, owner.key());
-
         if !counter.is_writable() {
             return Err(DeactivateCounterV1Error::CounterMustBeWriteable);
         }
 
-        if counter.key() != &counter_address {
-            return Err(DeactivateCounterV1Error::CounterAddressMismatch);
+        let (expected_counter, counter_bump) = find_counter_address(program_id, owner.key());
+        let observed_counter = counter.key();
+        if observed_counter != &expected_counter {
+            return Err(DeactivateCounterV1Error::CounterAddressMismatch {
+                expected: expected_counter,
+                observed: *observed_counter,
+            });
         }
 
         if !counter.is_owned_by(program_id) {

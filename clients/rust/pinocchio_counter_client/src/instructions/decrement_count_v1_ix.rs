@@ -1,5 +1,5 @@
 use {
-    crate::find_counter_address,
+    crate::find_counter_v1_address,
     pinocchio_counter_program::InstructionDiscriminator,
     solana_instruction::{AccountMeta, Instruction},
     solana_pubkey::Pubkey,
@@ -42,7 +42,8 @@ impl DecrementCountV1Ix {
     /// A new `DecrementCountV1Ix` instance with default account metadata.
     #[must_use]
     pub fn new(program_id: Pubkey, owner: Pubkey) -> Self {
-        let (counter_address, _bump) = find_counter_address(&program_id, &owner);
+        let counter = find_counter_v1_address(&program_id, &owner);
+
         Self {
             program_id,
             owner: AccountMeta {
@@ -51,7 +52,7 @@ impl DecrementCountV1Ix {
                 is_writable: false,
             },
             counter: AccountMeta {
-                pubkey: counter_address,
+                pubkey: counter,
                 is_signer: false,
                 is_writable: true,
             },
@@ -86,7 +87,7 @@ impl DecrementCountV1Ix {
             return Err(DecrementCountV1IxError::CounterMustBeWriteable);
         }
 
-        let (expected_counter, _bump) = find_counter_address(&self.program_id, &self.owner.pubkey);
+        let expected_counter = find_counter_v1_address(&self.program_id, &self.owner.pubkey);
         let observed_counter = self.counter.pubkey;
         if observed_counter != expected_counter {
             return Err(DecrementCountV1IxError::CounterAddressMismatch {
@@ -126,13 +127,13 @@ impl TryFrom<DecrementCountV1Ix> for Instruction {
 
 #[cfg(test)]
 mod tests {
-    use {super::*, crate::find_counter_address};
+    use {super::*, crate::find_counter_v1_address};
 
     #[test]
     fn test_new_creates_valid_struct() {
         let program_id = Pubkey::new_unique();
         let owner = Pubkey::new_unique();
-        let (expected_counter, _bump) = find_counter_address(&program_id, &owner);
+        let expected_counter = find_counter_v1_address(&program_id, &owner);
 
         let decrement_ix = DecrementCountV1Ix::new(program_id, owner);
 
@@ -209,7 +210,7 @@ mod tests {
     fn test_to_instruction_creates_correct_structure() {
         let program_id = Pubkey::new_unique();
         let owner = Pubkey::new_unique();
-        let (expected_counter, _) = find_counter_address(&program_id, &owner);
+        let expected_counter = find_counter_v1_address(&program_id, &owner);
 
         let decrement_ix = DecrementCountV1Ix::new(program_id, owner);
         let instruction = decrement_ix.to_instruction(true).unwrap();

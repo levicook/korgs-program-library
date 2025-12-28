@@ -1,5 +1,5 @@
 use {
-    crate::find_counter_address,
+    crate::find_counter_v1_address,
     pinocchio_counter_program::InstructionDiscriminator,
     solana_instruction::{AccountMeta, Instruction},
     solana_pubkey::Pubkey,
@@ -33,7 +33,7 @@ pub struct InitializeCounterV1Ix {
 impl InitializeCounterV1Ix {
     #[must_use]
     pub fn new(program_id: Pubkey, payer: Pubkey) -> Self {
-        let (counter, _bump) = find_counter_address(&program_id, &payer);
+        let counter = find_counter_v1_address(&program_id, &payer);
 
         Self {
             program_id,
@@ -73,7 +73,7 @@ impl InitializeCounterV1Ix {
             return Err(InitializeCounterV1IxError::CounterMustBeWriteable);
         }
 
-        let (expected_counter, _bump) = find_counter_address(&self.program_id, &self.payer.pubkey);
+        let expected_counter = find_counter_v1_address(&self.program_id, &self.payer.pubkey);
         let observed_counter = self.counter.pubkey;
         if observed_counter != expected_counter {
             return Err(InitializeCounterV1IxError::CounterAddressMismatch {
@@ -122,7 +122,7 @@ impl TryFrom<InitializeCounterV1Ix> for Instruction {
 
 #[cfg(test)]
 mod tests {
-    use {super::*, crate::find_counter_address};
+    use {super::*, crate::find_counter_v1_address};
 
     #[test]
     fn test_new_derives_counter_pda_correctly() {
@@ -130,7 +130,7 @@ mod tests {
         let payer = Pubkey::new_unique();
 
         let init_ix = InitializeCounterV1Ix::new(program_id, payer);
-        let (expected_counter, _bump) = find_counter_address(&program_id, &payer);
+        let expected_counter = find_counter_v1_address(&program_id, &payer);
 
         assert_eq!(init_ix.counter.pubkey, expected_counter);
         assert_eq!(init_ix.program_id, program_id);
@@ -203,7 +203,7 @@ mod tests {
     fn test_validate_fails_when_counter_address_mismatch() {
         let program_id = Pubkey::new_unique();
         let payer = Pubkey::new_unique();
-        let (expected_counter, _) = find_counter_address(&program_id, &payer);
+        let expected_counter = find_counter_v1_address(&program_id, &payer);
 
         let mut init_ix = InitializeCounterV1Ix::new(program_id, payer);
         let wrong_counter = Pubkey::new_unique();
@@ -292,7 +292,7 @@ mod tests {
     fn test_to_instruction_creates_correct_structure() {
         let program_id = Pubkey::new_unique();
         let payer = Pubkey::new_unique();
-        let (expected_counter, _) = find_counter_address(&program_id, &payer);
+        let expected_counter = find_counter_v1_address(&program_id, &payer);
 
         let init_ix = InitializeCounterV1Ix::new(program_id, payer);
         let instruction = init_ix.to_instruction(true).unwrap();
@@ -335,7 +335,7 @@ mod tests {
         assert_eq!(instruction.accounts[0].pubkey, payer);
         assert_eq!(
             instruction.accounts[1].pubkey,
-            find_counter_address(&program_id, &payer).0
+            find_counter_v1_address(&program_id, &payer)
         );
         assert_eq!(instruction.accounts[2].pubkey, solana_system_program::id());
         assert_eq!(

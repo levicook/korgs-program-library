@@ -7,7 +7,7 @@ use {
         },
     },
     pinocchio_counter_client::{
-        find_counter_address,
+        find_counter_v1_address, find_counter_v1,
         transactions::{DeactivateCounterV1SimpleTx, InitializeCounterV1SimpleTx},
     },
     pinocchio_counter_program::{AccountDiscriminator, CounterV1},
@@ -27,7 +27,7 @@ fn succeeds() -> TestResult {
     let tx_result = ctx.send_transaction(init_counter_tx);
     demand_tx_success(&tx_result);
 
-    let (counter_pk, bump) = find_counter_address(&ctx.program_id(), &owner_pk);
+    let (counter_pk, bump) = find_counter_v1(&ctx.program_id(), &owner_pk);
 
     let counter_account = ctx
         .get_account(counter_pk)
@@ -183,7 +183,7 @@ fn fails_when_counter_has_pre_existing_data() -> TestResult {
     let tx_result = ctx.send_transaction(init_counter_tx1);
     demand_tx_success(&tx_result);
 
-    let (counter_pk, _) = find_counter_address(&ctx.program_id(), &owner_pk);
+    let counter_pk = find_counter_v1_address(&ctx.program_id(), &owner_pk);
     let counter_account = ctx.get_account(counter_pk).ok_or("Counter should exist")?;
     assert!(!counter_account.data.is_empty(), "Counter should have data");
 
@@ -227,7 +227,7 @@ fn fails_when_reinitializing_deactivated_counter() -> TestResult {
     let tx_result = ctx.send_transaction(deactivate_tx);
     demand_tx_success(&tx_result);
 
-    let (counter_pk, _) = find_counter_address(&ctx.program_id(), &owner_pk);
+    let counter_pk = find_counter_v1_address(&ctx.program_id(), &owner_pk);
     let counter_account = ctx.get_account(counter_pk).ok_or("Counter should exist")?;
     // Deactivated counter should have 1 byte (discriminator)
     assert_eq!(
@@ -296,7 +296,7 @@ fn fails_when_not_enough_accounts() -> TestResult {
     let owner_kp = ctx.create_funded_keypair();
     let owner_pk = owner_kp.pubkey();
 
-    let (counter_pk, _) = find_counter_address(&ctx.program_id(), &owner_pk);
+    let counter_pk = find_counter_v1_address(&ctx.program_id(), &owner_pk);
 
     let malicious_ix = MaliciousInitializeCounterV1Ix::from_valid(ctx.program_id(), owner_pk);
     let instruction = malicious_ix.build_with_accounts(vec![

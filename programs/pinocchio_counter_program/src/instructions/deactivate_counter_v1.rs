@@ -1,7 +1,6 @@
 use {
     crate::{
-        find_counter_address, AccountDiscriminator, AccountDiscriminatorError,
-        DEACTIVATED_ACCOUNT_SIZE,
+        find_counter_v1, AccountDiscriminator, AccountDiscriminatorError, DEACTIVATED_ACCOUNT_SIZE,
     },
     pinocchio::{
         account_info::AccountInfo,
@@ -111,7 +110,7 @@ impl<'a> TryFrom<(&Pubkey, &'a [AccountInfo])> for DeactivateCounterV1Accounts<'
             return Err(DeactivateCounterV1Error::CounterMustBeWriteable);
         }
 
-        let (expected_counter, counter_bump) = find_counter_address(program_id, owner.key());
+        let (expected_counter, counter_bump) = find_counter_v1(program_id, owner.key());
         let observed_counter = counter.key();
         if observed_counter != &expected_counter {
             return Err(DeactivateCounterV1Error::CounterAddressMismatch {

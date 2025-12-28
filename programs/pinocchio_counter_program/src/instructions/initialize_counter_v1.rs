@@ -1,5 +1,5 @@
 use {
-    crate::{find_counter_address, AccountDiscriminator, CounterV1, COUNTER_SEED},
+    crate::{find_counter_v1, AccountDiscriminator, CounterV1, COUNTER_V1_SEED},
     pinocchio::{
         account_info::AccountInfo, instruction::Signer, program_error::ProgramError,
         pubkey::Pubkey, seeds,
@@ -48,7 +48,7 @@ impl InitializeCounterV1<'_> {
         let owner = self.accounts.payer.key();
         let owner_ref = owner.as_ref();
         let bump_ref = &[self.accounts.counter_bump];
-        let seeds = seeds!(COUNTER_SEED, owner_ref, bump_ref);
+        let seeds = seeds!(COUNTER_V1_SEED, owner_ref, bump_ref);
         let signer = Signer::from(&seeds);
 
         create_account_with_minimum_balance_signed(
@@ -118,7 +118,7 @@ impl<'a> TryFrom<(&Pubkey, &'a [AccountInfo])> for InitializeCounterV1Accounts<'
             return Err(InitializeCounterV1Error::CounterMustBeWriteable);
         }
 
-        let (expected_counter, counter_bump) = find_counter_address(program_id, payer.key());
+        let (expected_counter, counter_bump) = find_counter_v1(program_id, payer.key());
         let observed_counter = counter.key();
         if observed_counter != &expected_counter {
             return Err(InitializeCounterV1Error::CounterAddressMismatch {

@@ -1,5 +1,5 @@
 use {
-    crate::find_counter_address,
+    crate::find_counter_v1_address,
     pinocchio_counter_program::{InstructionDiscriminator, SetCountV1Args},
     solana_instruction::{AccountMeta, Instruction},
     solana_pubkey::Pubkey,
@@ -48,7 +48,8 @@ impl SetCountV1Ix {
     /// A new `SetCountV1Ix` instance with default account metadata.
     #[must_use]
     pub fn new(program_id: Pubkey, owner: Pubkey, count: u64) -> Self {
-        let (counter_address, _bump) = find_counter_address(&program_id, &owner);
+        let counter = find_counter_v1_address(&program_id, &owner);
+
         Self {
             program_id,
             owner: AccountMeta {
@@ -57,7 +58,7 @@ impl SetCountV1Ix {
                 is_writable: false,
             },
             counter: AccountMeta {
-                pubkey: counter_address,
+                pubkey: counter,
                 is_signer: false,
                 is_writable: true,
             },
@@ -100,7 +101,7 @@ impl SetCountV1Ix {
             return Err(SetCountV1IxError::CounterMustBeWriteable);
         }
 
-        let (expected_counter, _bump) = find_counter_address(&self.program_id, &self.owner.pubkey);
+        let expected_counter = find_counter_v1_address(&self.program_id, &self.owner.pubkey);
         let observed_counter = self.counter.pubkey;
         if observed_counter != expected_counter {
             return Err(SetCountV1IxError::CounterAddressMismatch {
@@ -147,14 +148,14 @@ impl TryFrom<SetCountV1Ix> for Instruction {
 
 #[cfg(test)]
 mod tests {
-    use {super::*, crate::find_counter_address};
+    use {super::*, crate::find_counter_v1_address};
 
     #[test]
     fn test_new_creates_valid_struct() {
         let program_id = Pubkey::new_unique();
         let owner = Pubkey::new_unique();
         let count = 42u64;
-        let (expected_counter, _bump) = find_counter_address(&program_id, &owner);
+        let expected_counter = find_counter_v1_address(&program_id, &owner);
 
         let set_ix = SetCountV1Ix::new(program_id, owner, count);
 
@@ -233,7 +234,7 @@ mod tests {
         let program_id = Pubkey::new_unique();
         let owner = Pubkey::new_unique();
         let count = 123u64;
-        let (expected_counter, _) = find_counter_address(&program_id, &owner);
+        let expected_counter = find_counter_v1_address(&program_id, &owner);
 
         let set_ix = SetCountV1Ix::new(program_id, owner, count);
         let instruction = set_ix.to_instruction(true).unwrap();

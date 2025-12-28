@@ -1,5 +1,5 @@
 use {
-    crate::{find_counter_address, AccountDiscriminator, AccountDiscriminatorError, CounterV1},
+    crate::{find_counter_v1, AccountDiscriminator, AccountDiscriminatorError, CounterV1},
     pinocchio::{account_info::AccountInfo, program_error::ProgramError, pubkey::Pubkey},
     wincode::{ReadError, WriteError},
 };
@@ -96,7 +96,7 @@ impl<'a> TryFrom<(&Pubkey, &'a [AccountInfo])> for DecrementCountV1Accounts<'a> 
             return Err(DecrementCountV1Error::CounterMustBeWriteable);
         }
 
-        let (expected_counter, _bump) = find_counter_address(program_id, owner.key());
+        let (expected_counter, _bump) = find_counter_v1(program_id, owner.key());
         let observed_counter = counter.key();
         if observed_counter != &expected_counter {
             return Err(DecrementCountV1Error::CounterAddressMismatch {

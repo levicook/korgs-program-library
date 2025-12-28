@@ -2,7 +2,7 @@ use {
     bolero::check,
     pinocchio::pubkey::Pubkey,
     pinocchio_counter_program::{
-        try_find_counter_address, AccountDiscriminator, CounterV1, SetCountV1Args,
+        try_find_counter_v1, AccountDiscriminator, CounterV1, SetCountV1Args,
     },
 };
 
@@ -160,8 +160,8 @@ fn fuzz_find_counter_address_deterministic() {
     check!()
         .with_generator(bolero::any::<(Pubkey, Pubkey)>())
         .for_each(|(program_id, owner)| {
-            let result1 = try_find_counter_address(program_id, owner);
-            let result2 = try_find_counter_address(program_id, owner);
+            let result1 = try_find_counter_v1(program_id, owner);
+            let result2 = try_find_counter_v1(program_id, owner);
 
             // If the function succeeds, it must be deterministic
             match (result1, result2) {
@@ -195,8 +195,8 @@ fn fuzz_find_counter_address_collision_resistance() {
                 return;
             }
 
-            let result1 = try_find_counter_address(program_id, owner1);
-            let result2 = try_find_counter_address(program_id, owner2);
+            let result1 = try_find_counter_v1(program_id, owner1);
+            let result2 = try_find_counter_v1(program_id, owner2);
 
             // If both succeed, different owners must produce different addresses (collision resistance)
             match (result1, result2) {
@@ -224,8 +224,8 @@ fn fuzz_find_counter_address_program_isolation() {
                 return;
             }
 
-            let result1 = try_find_counter_address(program_id1, owner);
-            let result2 = try_find_counter_address(program_id2, owner);
+            let result1 = try_find_counter_v1(program_id1, owner);
+            let result2 = try_find_counter_v1(program_id2, owner);
 
             // If both succeed, different program IDs must produce different addresses (program isolation)
             match (result1, result2) {

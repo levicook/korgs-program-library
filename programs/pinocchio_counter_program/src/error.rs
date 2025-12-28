@@ -416,7 +416,7 @@ mod tests {
                 0x30b,
                 InstructionError::IncrementCountV1(
                     IncrementCountV1Error::AccountDiscriminatorError(
-                        AccountDiscriminatorError::Mismatch {
+                        AccountDiscriminatorError::DiscriminatorMismatch {
                             expected: AccountDiscriminator::CounterV1Account,
                             observed: AccountDiscriminator::DeactivatedAccount,
                         },

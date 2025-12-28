@@ -128,7 +128,7 @@ fn fails_when_owner_not_signer() -> TestResult {
 
     let malicious_tx =
         MaliciousIncrementCountV1Tx::from_valid(ctx.program_id(), owner_kp, ctx.latest_blockhash())
-            .with_malicious_instruction(super::malicious_builders::increment_count_v1::MaliciousIncrementCountV1Ix::with_owner_not_signer)
+            .with_malicious_instruction(MaliciousIncrementCountV1Ix::with_owner_not_signer)
             .with_different_signer(fee_payer_kp)
             .build();
 
@@ -158,7 +158,7 @@ fn fails_when_counter_not_writable() -> TestResult {
 
     let malicious_tx =
         MaliciousIncrementCountV1Tx::from_valid(ctx.program_id(), owner_kp, ctx.latest_blockhash())
-            .with_malicious_instruction(super::malicious_builders::increment_count_v1::MaliciousIncrementCountV1Ix::with_counter_not_writable)
+            .with_malicious_instruction(MaliciousIncrementCountV1Ix::with_counter_not_writable)
             .build();
 
     let tx_result = ctx.send_transaction(malicious_tx);
@@ -187,7 +187,7 @@ fn fails_when_counter_address_mismatch() -> TestResult {
 
     let malicious_tx =
         MaliciousIncrementCountV1Tx::from_valid(ctx.program_id(), owner_kp, ctx.latest_blockhash())
-            .with_malicious_instruction(super::malicious_builders::increment_count_v1::MaliciousIncrementCountV1Ix::with_random_counter_address)
+            .with_malicious_instruction(MaliciousIncrementCountV1Ix::with_random_counter_address)
             .build();
 
     let tx_result = ctx.send_transaction(malicious_tx);

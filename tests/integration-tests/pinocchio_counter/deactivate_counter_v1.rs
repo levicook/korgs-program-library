@@ -127,7 +127,7 @@ fn fails_when_owner_not_signer() -> TestResult {
         owner_kp,
         ctx.latest_blockhash(),
     )
-    .with_malicious_instruction(super::malicious_builders::deactivate_counter_v1::MaliciousDeactivateCounterV1Ix::with_owner_not_signer)
+    .with_malicious_instruction(MaliciousDeactivateCounterV1Ix::with_owner_not_signer)
     .with_different_signer(fee_payer_kp)
     .build();
 
@@ -159,7 +159,7 @@ fn fails_when_counter_not_writable() -> TestResult {
         owner_kp,
         ctx.latest_blockhash(),
     )
-    .with_malicious_instruction(super::malicious_builders::deactivate_counter_v1::MaliciousDeactivateCounterV1Ix::with_counter_not_writable)
+    .with_malicious_instruction(MaliciousDeactivateCounterV1Ix::with_counter_not_writable)
     .build();
 
     let tx_result = ctx.send_transaction(malicious_tx);
@@ -190,7 +190,7 @@ fn fails_when_counter_address_mismatch() -> TestResult {
         owner_kp,
         ctx.latest_blockhash(),
     )
-    .with_malicious_instruction(super::malicious_builders::deactivate_counter_v1::MaliciousDeactivateCounterV1Ix::with_random_counter_address)
+    .with_malicious_instruction(MaliciousDeactivateCounterV1Ix::with_random_counter_address)
     .build();
 
     let tx_result = ctx.send_transaction(malicious_tx);
@@ -338,7 +338,7 @@ fn fails_with_empty_instruction_data() -> TestResult {
         owner_kp,
         ctx.latest_blockhash(),
     )
-    .with_malicious_instruction(super::malicious_builders::deactivate_counter_v1::MaliciousDeactivateCounterV1Ix::with_empty_data)
+    .with_malicious_instruction(MaliciousDeactivateCounterV1Ix::with_empty_data)
     .build();
 
     let tx_result = ctx.send_transaction(malicious_tx);

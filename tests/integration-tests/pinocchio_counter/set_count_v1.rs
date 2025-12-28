@@ -130,17 +130,11 @@ fn fails_when_owner_not_signer() -> TestResult {
 
     ctx.advance_slot(1)?;
 
-    let malicious_tx = MaliciousSetCountV1Tx::from_valid(
-        ctx.program_id(),
-        owner_kp,
-        50,
-        ctx.latest_blockhash(),
-    )
-    .with_malicious_instruction(
-        super::malicious_builders::set_count_v1::MaliciousSetCountV1Ix::with_owner_not_signer,
-    )
-    .with_different_signer(fee_payer_kp)
-    .build();
+    let malicious_tx =
+        MaliciousSetCountV1Tx::from_valid(ctx.program_id(), owner_kp, 50, ctx.latest_blockhash())
+            .with_malicious_instruction(MaliciousSetCountV1Ix::with_owner_not_signer)
+            .with_different_signer(fee_payer_kp)
+            .build();
 
     let tx_result = ctx.send_transaction(malicious_tx);
     demand_tx_failure(&tx_result);
@@ -166,16 +160,10 @@ fn fails_when_counter_not_writable() -> TestResult {
 
     ctx.advance_slot(1)?;
 
-    let malicious_tx = MaliciousSetCountV1Tx::from_valid(
-        ctx.program_id(),
-        owner_kp,
-        50,
-        ctx.latest_blockhash(),
-    )
-    .with_malicious_instruction(
-        super::malicious_builders::set_count_v1::MaliciousSetCountV1Ix::with_counter_not_writable,
-    )
-    .build();
+    let malicious_tx =
+        MaliciousSetCountV1Tx::from_valid(ctx.program_id(), owner_kp, 50, ctx.latest_blockhash())
+            .with_malicious_instruction(MaliciousSetCountV1Ix::with_counter_not_writable)
+            .build();
 
     let tx_result = ctx.send_transaction(malicious_tx);
     demand_tx_failure(&tx_result);
@@ -201,16 +189,10 @@ fn fails_when_counter_address_mismatch() -> TestResult {
 
     ctx.advance_slot(1)?;
 
-    let malicious_tx = MaliciousSetCountV1Tx::from_valid(
-        ctx.program_id(),
-        owner_kp,
-        50,
-        ctx.latest_blockhash(),
-    )
-    .with_malicious_instruction(
-        super::malicious_builders::set_count_v1::MaliciousSetCountV1Ix::with_random_counter_address,
-    )
-    .build();
+    let malicious_tx =
+        MaliciousSetCountV1Tx::from_valid(ctx.program_id(), owner_kp, 50, ctx.latest_blockhash())
+            .with_malicious_instruction(MaliciousSetCountV1Ix::with_random_counter_address)
+            .build();
 
     let tx_result = ctx.send_transaction(malicious_tx);
     demand_tx_failure(&tx_result);

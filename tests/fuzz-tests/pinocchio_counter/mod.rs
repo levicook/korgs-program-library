@@ -32,14 +32,13 @@ fn fuzz_set_count_v1_args_serialization_roundtrip() {
 #[test]
 fn fuzz_counter_serialization_roundtrip_all_fields() {
     check!()
-        .with_generator(bolero::any::<(Pubkey, u8, u64, [u8; 31])>())
-        .for_each(|(owner, bump, count, reserved)| {
+        .with_generator(bolero::any::<(Pubkey, u8, u64)>())
+        .for_each(|(owner, bump, count)| {
             let original = CounterV1 {
                 discriminator: AccountDiscriminator::CounterV1Account,
                 owner: *owner,
                 bump: *bump,
                 count: *count,
-                reserved: *reserved,
             };
 
             let serialized = original.serialize().expect("serialization should succeed");
@@ -52,7 +51,6 @@ fn fuzz_counter_serialization_roundtrip_all_fields() {
             assert_eq!(original.owner, deserialized.owner);
             assert_eq!(original.bump, deserialized.bump);
             assert_eq!(original.count, deserialized.count);
-            assert_eq!(original.reserved, deserialized.reserved);
         });
 }
 

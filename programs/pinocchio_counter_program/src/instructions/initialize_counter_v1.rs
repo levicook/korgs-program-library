@@ -65,7 +65,6 @@ impl InitializeCounterV1<'_> {
             owner: *owner,
             bump: self.accounts.counter_bump,
             count: 0,
-            reserved: [0; 31],
         };
 
         let serialized = state.serialize()?;

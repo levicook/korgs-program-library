@@ -4,7 +4,7 @@ use {
         InstructionDiscriminator, InstructionDiscriminatorError, InstructionError, SetCountV1,
     },
     pinocchio::{
-        account_info::AccountInfo, entrypoint, program_error::ProgramError, pubkey::Pubkey,
+        account_info::AccountInfo, entrypoint, msg, program_error::ProgramError, pubkey::Pubkey,
         ProgramResult,
     },
 };
@@ -56,13 +56,13 @@ pub fn process_instruction(
 
 fn handle_instruction_discriminator_error(err: InstructionDiscriminatorError) -> ProgramError {
     let error_msg = format!("Instruction Discriminator Error: {:?}", err);
-    pinocchio::msg!(&error_msg);
+    msg!(&error_msg);
     err.into()
 }
 
 fn handle_instruction_error<E: std::fmt::Debug + Into<InstructionError>>(err: E) -> ProgramError {
     let instruction_error: InstructionError = err.into();
     let error_msg = format!("Instruction Error: {:?}", instruction_error);
-    pinocchio::msg!(&error_msg);
+    msg!(&error_msg);
     instruction_error.into()
 }

@@ -78,8 +78,6 @@ fn succeeds() -> TestResult {
 
     assert_eq!(counter.count, 0);
 
-    assert_eq!(counter.reserved, [0; 31]);
-
     Ok(())
 }
 
@@ -98,7 +96,7 @@ fn fails_when_payer_not_signer() -> TestResult {
         owner_kp,
         ctx.latest_blockhash(),
     )
-    .with_malicious_instruction(super::malicious_builders::initialize_counter_v1::MaliciousInitializeCounterV1Ix::with_payer_not_signer)
+    .with_malicious_instruction(MaliciousInitializeCounterV1Ix::with_payer_not_signer)
     .with_different_signer(fee_payer_kp) // Sign with different keypair
     .build();
 
@@ -120,7 +118,7 @@ fn fails_when_counter_not_writable() -> TestResult {
         owner_kp,
         ctx.latest_blockhash(),
     )
-    .with_malicious_instruction(super::malicious_builders::initialize_counter_v1::MaliciousInitializeCounterV1Ix::with_counter_not_writable)
+    .with_malicious_instruction(MaliciousInitializeCounterV1Ix::with_counter_not_writable)
     .build();
 
     let tx_result = ctx.send_transaction(malicious_tx);
@@ -140,7 +138,7 @@ fn fails_when_counter_address_mismatch() -> TestResult {
         owner_kp,
         ctx.latest_blockhash(),
     )
-    .with_malicious_instruction(super::malicious_builders::initialize_counter_v1::MaliciousInitializeCounterV1Ix::with_random_counter_address)
+    .with_malicious_instruction(MaliciousInitializeCounterV1Ix::with_random_counter_address)
     .build();
 
     let tx_result = ctx.send_transaction(malicious_tx);
@@ -160,7 +158,7 @@ fn fails_when_system_program_address_mismatch() -> TestResult {
         owner_kp,
         ctx.latest_blockhash(),
     )
-    .with_malicious_instruction(super::malicious_builders::initialize_counter_v1::MaliciousInitializeCounterV1Ix::with_random_system_program)
+    .with_malicious_instruction(MaliciousInitializeCounterV1Ix::with_random_system_program)
     .build();
 
     let tx_result = ctx.send_transaction(malicious_tx);
@@ -282,7 +280,7 @@ fn fails_with_empty_instruction_data() -> TestResult {
         owner_kp,
         ctx.latest_blockhash(),
     )
-    .with_malicious_instruction(super::malicious_builders::initialize_counter_v1::MaliciousInitializeCounterV1Ix::with_empty_data)
+    .with_malicious_instruction(MaliciousInitializeCounterV1Ix::with_empty_data)
     .build();
 
     let tx_result = ctx.send_transaction(malicious_tx);

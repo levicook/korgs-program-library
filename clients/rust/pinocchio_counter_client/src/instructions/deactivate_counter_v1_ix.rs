@@ -60,16 +60,17 @@ impl DeactivateCounterV1Ix {
             return Err(DeactivateCounterV1IxError::OwnerMustBeWriteable);
         }
 
+        if !self.counter.is_writable {
+            return Err(DeactivateCounterV1IxError::CounterMustBeWriteable);
+        }
+
         let (expected_counter, _bump) = find_counter_address(&self.program_id, &self.owner.pubkey);
-        if self.counter.pubkey != expected_counter {
+        let observed_counter = self.counter.pubkey;
+        if observed_counter != expected_counter {
             return Err(DeactivateCounterV1IxError::CounterAddressMismatch {
                 expected: expected_counter,
                 observed: self.counter.pubkey,
             });
-        }
-
-        if !self.counter.is_writable {
-            return Err(DeactivateCounterV1IxError::CounterMustBeWriteable);
         }
 
         Ok(())

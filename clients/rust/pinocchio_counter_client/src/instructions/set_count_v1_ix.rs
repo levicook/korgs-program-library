@@ -96,16 +96,17 @@ impl SetCountV1Ix {
             return Err(SetCountV1IxError::OwnerMustBeSigner);
         }
 
-        let (expected_counter, _bump) = find_counter_address(&self.program_id, &self.owner.pubkey);
-        if self.counter.pubkey != expected_counter {
-            return Err(SetCountV1IxError::CounterAddressMismatch {
-                expected: expected_counter,
-                observed: self.counter.pubkey,
-            });
-        }
-
         if !self.counter.is_writable {
             return Err(SetCountV1IxError::CounterMustBeWriteable);
+        }
+
+        let (expected_counter, _bump) = find_counter_address(&self.program_id, &self.owner.pubkey);
+        let observed_counter = self.counter.pubkey;
+        if observed_counter != expected_counter {
+            return Err(SetCountV1IxError::CounterAddressMismatch {
+                expected: expected_counter,
+                observed: observed_counter,
+            });
         }
 
         Ok(())

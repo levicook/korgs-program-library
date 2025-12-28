@@ -69,22 +69,25 @@ impl InitializeCounterV1Ix {
             return Err(InitializeCounterV1IxError::PayerMustBeWriteable);
         }
 
-        let (expected_counter, _bump) = find_counter_address(&self.program_id, &self.payer.pubkey);
-        if self.counter.pubkey != expected_counter {
-            return Err(InitializeCounterV1IxError::CounterAddressMismatch {
-                expected: expected_counter,
-                observed: self.counter.pubkey,
-            });
-        }
-
         if !self.counter.is_writable {
             return Err(InitializeCounterV1IxError::CounterMustBeWriteable);
         }
 
-        if self.system_program.pubkey != solana_system_program::id() {
+        let (expected_counter, _bump) = find_counter_address(&self.program_id, &self.payer.pubkey);
+        let observed_counter = self.counter.pubkey;
+        if observed_counter != expected_counter {
+            return Err(InitializeCounterV1IxError::CounterAddressMismatch {
+                expected: expected_counter,
+                observed: observed_counter,
+            });
+        }
+
+        let observed_system_program = self.system_program.pubkey;
+        let expected_system_program = solana_system_program::id();
+        if observed_system_program != expected_system_program {
             return Err(InitializeCounterV1IxError::SystemProgramAddressMismatch {
-                expected: solana_system_program::id(),
-                observed: self.system_program.pubkey,
+                expected: expected_system_program,
+                observed: observed_system_program,
             });
         }
 

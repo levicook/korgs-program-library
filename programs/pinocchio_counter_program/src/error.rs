@@ -39,7 +39,7 @@ impl From<InstructionError> for ProgramError {
                         InitializeCounterV1Error::NotEnoughAccounts { .. } => 0x01,
                         InitializeCounterV1Error::PayerMustBeSigner => 0x02,
                         InitializeCounterV1Error::CounterMustBeWriteable => 0x03,
-                        InitializeCounterV1Error::CounterAddressMismatch => 0x04,
+                        InitializeCounterV1Error::CounterAddressMismatch { .. } => 0x04,
                         InitializeCounterV1Error::CounterMustBeEmpty => 0x05,
                         InitializeCounterV1Error::CounterMustHaveZeroLamports => 0x06,
                         InitializeCounterV1Error::CounterMustBeOwnedBySystemProgram => 0x07,
@@ -249,7 +249,10 @@ mod tests {
             (
                 0x104,
                 InstructionError::InitializeCounterV1(
-                    InitializeCounterV1Error::CounterAddressMismatch,
+                    InitializeCounterV1Error::CounterAddressMismatch {
+                        expected: Default::default(),
+                        observed: Default::default(),
+                    },
                 ),
             ),
             (

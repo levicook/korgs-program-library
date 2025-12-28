@@ -82,16 +82,17 @@ impl IncrementCountV1Ix {
             return Err(IncrementCountV1IxError::OwnerMustBeSigner);
         }
 
+        if !self.counter.is_writable {
+            return Err(IncrementCountV1IxError::CounterMustBeWriteable);
+        }
+
         let (expected_counter, _bump) = find_counter_address(&self.program_id, &self.owner.pubkey);
-        if self.counter.pubkey != expected_counter {
+        let observed_counter = self.counter.pubkey;
+        if observed_counter != expected_counter {
             return Err(IncrementCountV1IxError::CounterAddressMismatch {
                 expected: expected_counter,
                 observed: self.counter.pubkey,
             });
-        }
-
-        if !self.counter.is_writable {
-            return Err(IncrementCountV1IxError::CounterMustBeWriteable);
         }
 
         Ok(())

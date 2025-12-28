@@ -26,7 +26,7 @@ pub enum InitializeCounterV1Error {
     NotEnoughAccounts { expected: usize, observed: usize },
     PayerMustBeSigner,
     CounterMustBeWriteable,
-    CounterAddressMismatch,
+    CounterAddressMismatch { expected: Pubkey, observed: Pubkey },
     CounterMustBeEmpty,
     CounterMustHaveZeroLamports,
     CounterMustBeOwnedBySystemProgram,
@@ -115,14 +115,17 @@ impl<'a> TryFrom<(&Pubkey, &'a [AccountInfo])> for InitializeCounterV1Accounts<'
             return Err(InitializeCounterV1Error::PayerMustBeSigner);
         }
 
-        let (counter_address, counter_bump) = find_counter_address(program_id, payer.key());
-
         if !counter.is_writable() {
             return Err(InitializeCounterV1Error::CounterMustBeWriteable);
         }
 
-        if counter.key() != &counter_address {
-            return Err(InitializeCounterV1Error::CounterAddressMismatch);
+        let (expected_counter, counter_bump) = find_counter_address(program_id, payer.key());
+        let observed_counter = counter.key();
+        if observed_counter != &expected_counter {
+            return Err(InitializeCounterV1Error::CounterAddressMismatch {
+                expected: expected_counter,
+                observed: *observed_counter,
+            });
         }
 
         if !counter.data_is_empty() {

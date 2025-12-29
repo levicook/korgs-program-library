@@ -17,6 +17,9 @@ pub enum InstructionDiscriminator {
 
     #[wincode(tag = 5)]
     SetCountV1 = 5,
+
+    #[wincode(tag = 6)]
+    ReactivateCounterV1 = 6,
 }
 
 #[derive(Debug)]
@@ -53,6 +56,7 @@ impl TryFrom<&u8> for InstructionDiscriminator {
             3 => Ok(InstructionDiscriminator::DecrementCountV1),
             4 => Ok(InstructionDiscriminator::IncrementCountV1),
             5 => Ok(InstructionDiscriminator::SetCountV1),
+            6 => Ok(InstructionDiscriminator::ReactivateCounterV1),
             _ => Err(InstructionDiscriminatorError::Invalid(*byte)),
         }
     }
@@ -66,6 +70,7 @@ impl From<InstructionDiscriminator> for u8 {
             InstructionDiscriminator::DecrementCountV1 => 3,
             InstructionDiscriminator::IncrementCountV1 => 4,
             InstructionDiscriminator::SetCountV1 => 5,
+            InstructionDiscriminator::ReactivateCounterV1 => 6,
         }
     }
 }
@@ -92,6 +97,7 @@ mod tests {
             (3u8, InstructionDiscriminator::DecrementCountV1),
             (4u8, InstructionDiscriminator::IncrementCountV1),
             (5u8, InstructionDiscriminator::SetCountV1),
+            (6u8, InstructionDiscriminator::ReactivateCounterV1),
         ];
 
         for (byte, expected) in test_cases {
@@ -116,7 +122,7 @@ mod tests {
 
     #[test]
     fn test_parse_invalid_discriminator() {
-        let invalid_discriminators = [6u8, 255u8];
+        let invalid_discriminators = [7u8, 255u8];
 
         for invalid_byte in invalid_discriminators {
             let instruction_data = [invalid_byte, 0x42];

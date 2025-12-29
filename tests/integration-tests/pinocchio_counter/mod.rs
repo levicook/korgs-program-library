@@ -15,6 +15,7 @@ pub mod decrement_count_v1;
 pub mod increment_count_v1;
 pub mod initialize_counter_v1;
 pub mod malicious_builders;
+pub mod reactivate_counter_v1;
 pub mod set_count_v1;
 
 pub type TestResult = Result<(), Box<dyn std::error::Error>>;

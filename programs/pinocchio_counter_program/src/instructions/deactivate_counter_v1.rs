@@ -30,7 +30,6 @@ pub enum DeactivateCounterV1Error {
     OwnerMustBeWriteable,
     CounterMustBeWriteable,
     CounterAddressMismatch { expected: Pubkey, observed: Pubkey },
-    CounterMustBeOwnedByProgram,
     DeserializeError(ReadError),
     AccountDiscriminatorError(AccountDiscriminatorError),
 }
@@ -117,10 +116,6 @@ impl<'a> TryFrom<(&Pubkey, &'a [AccountInfo])> for DeactivateCounterV1Accounts<'
                 expected: expected_counter,
                 observed: *observed_counter,
             });
-        }
-
-        if !counter.is_owned_by(program_id) {
-            return Err(DeactivateCounterV1Error::CounterMustBeOwnedByProgram);
         }
 
         let counter_data = counter.try_borrow_data()?;

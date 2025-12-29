@@ -1,5 +1,6 @@
 mod deactivate_counter_v1;
 mod initialize_counter_v1;
+mod reactivate_counter_v1;
 
 mod decrement_count_v1;
 mod increment_count_v1;
@@ -10,5 +11,6 @@ pub use {
     decrement_count_v1::{DecrementCountV1, DecrementCountV1Error},
     increment_count_v1::{IncrementCountV1, IncrementCountV1Error},
     initialize_counter_v1::{InitializeCounterV1, InitializeCounterV1Error},
+    reactivate_counter_v1::{ReactivateCounterV1, ReactivateCounterV1Error},
     set_count_v1::{SetCountV1, SetCountV1Args, SetCountV1Error},
 };

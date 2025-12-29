@@ -2,6 +2,7 @@ mod deactivate_counter_v1_tx;
 mod decrement_count_v1_tx;
 mod increment_count_v1_tx;
 mod initialize_counter_v1_tx;
+mod reactivate_counter_v1_tx;
 mod set_count_v1_tx;
 
 pub use {
@@ -9,5 +10,6 @@ pub use {
     decrement_count_v1_tx::{DecrementCountV1SimpleTx, DecrementCountV1SimpleTxError},
     increment_count_v1_tx::{IncrementCountV1SimpleTx, IncrementCountV1SimpleTxError},
     initialize_counter_v1_tx::{InitializeCounterV1SimpleTx, InitializeCounterV1SimpleTxError},
+    reactivate_counter_v1_tx::{ReactivateCounterV1SimpleTx, ReactivateCounterV1SimpleTxError},
     set_count_v1_tx::{SetCountV1SimpleTx, SetCountV1SimpleTxError},
 };

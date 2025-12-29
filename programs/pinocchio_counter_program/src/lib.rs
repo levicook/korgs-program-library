@@ -12,8 +12,8 @@ pub use {
     account_discriminator::{AccountDiscriminator, AccountDiscriminatorError},
     error::{InstructionError, InstructionResult},
     instructions::{
-        DeactivateCounterV1, DecrementCountV1, IncrementCountV1, InitializeCounterV1, SetCountV1,
-        SetCountV1Args,
+        DeactivateCounterV1, DecrementCountV1, IncrementCountV1, InitializeCounterV1,
+        ReactivateCounterV1, SetCountV1, SetCountV1Args,
     },
     instructions_discriminator::{InstructionDiscriminator, InstructionDiscriminatorError},
     state::{CounterV1, DEACTIVATED_ACCOUNT_SIZE},

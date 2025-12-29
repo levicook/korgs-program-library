@@ -7,7 +7,7 @@ use {
         },
     },
     pinocchio_counter_client::{
-        find_counter_v1_address, find_counter_v1,
+        find_counter_v1, find_counter_v1_address,
         transactions::{DeactivateCounterV1SimpleTx, InitializeCounterV1SimpleTx},
     },
     pinocchio_counter_program::{AccountDiscriminator, CounterV1},

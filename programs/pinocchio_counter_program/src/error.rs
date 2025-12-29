@@ -2,7 +2,7 @@ use {
     crate::{
         instructions::{
             DeactivateCounterV1Error, DecrementCountV1Error, IncrementCountV1Error,
-            InitializeCounterV1Error, SetCountV1Error,
+            InitializeCounterV1Error, ReactivateCounterV1Error, SetCountV1Error,
         },
         InstructionDiscriminatorError,
     },
@@ -16,6 +16,7 @@ const DEACTIVATE_COUNTER_V1_OFFSET: u32 = 0x200; // 512
 const INCREMENT_COUNT_V1_OFFSET: u32 = 0x300; // 768
 const DECREMENT_COUNT_V1_OFFSET: u32 = 0x400; // 1024
 const SET_COUNT_V1_OFFSET: u32 = 0x500; // 1280
+const REACTIVATE_COUNTER_V1_OFFSET: u32 = 0x600; // 1536
 
 #[derive(Debug)]
 pub enum InstructionError {
@@ -25,6 +26,7 @@ pub enum InstructionError {
     IncrementCountV1(IncrementCountV1Error),
     DecrementCountV1(DecrementCountV1Error),
     SetCountV1(SetCountV1Error),
+    ReactivateCounterV1(ReactivateCounterV1Error),
 }
 
 pub type InstructionResult<T> = Result<T, InstructionError>;
@@ -62,7 +64,7 @@ impl From<InstructionError> for ProgramError {
                         DeactivateCounterV1Error::OwnerMustBeWriteable => 0x03,
                         DeactivateCounterV1Error::CounterMustBeWriteable => 0x04,
                         DeactivateCounterV1Error::CounterAddressMismatch { .. } => 0x05,
-                        DeactivateCounterV1Error::CounterMustBeOwnedByProgram => 0x06,
+                        // 0x06 reserved (retired: CounterMustBeOwnedByProgram - redundant with address validation)
                         // 0x07 reserved to maintain existing error code mappings
                         DeactivateCounterV1Error::DeserializeError(_) => 0x08,
                         // 0x09 reserved to maintain existing error code mappings
@@ -83,7 +85,7 @@ impl From<InstructionError> for ProgramError {
                         // 0x03 reserved to maintain existing error code mappings
                         IncrementCountV1Error::CounterMustBeWriteable => 0x04,
                         IncrementCountV1Error::CounterAddressMismatch { .. } => 0x05,
-                        IncrementCountV1Error::CounterMustBeOwnedByProgram => 0x06,
+                        // 0x06 reserved (retired: CounterMustBeOwnedByProgram - redundant with address validation)
                         IncrementCountV1Error::DeserializeError(_) => 0x07,
                         IncrementCountV1Error::SerializeError(_) => 0x08,
                         // 0x09 reserved (retired: OwnerMismatch - redundant with address validation)
@@ -104,7 +106,7 @@ impl From<InstructionError> for ProgramError {
                         // 0x03 reserved to maintain existing error code mappings
                         DecrementCountV1Error::CounterMustBeWriteable => 0x04,
                         DecrementCountV1Error::CounterAddressMismatch { .. } => 0x05,
-                        DecrementCountV1Error::CounterMustBeOwnedByProgram => 0x06,
+                        // 0x06 reserved (retired: CounterMustBeOwnedByProgram - redundant with address validation)
                         DecrementCountV1Error::DeserializeError(_) => 0x07,
                         DecrementCountV1Error::SerializeError(_) => 0x08,
                         // 0x09 reserved (retired: OwnerMismatch - redundant with address validation)
@@ -125,13 +127,34 @@ impl From<InstructionError> for ProgramError {
                         // 0x03 reserved to maintain existing error code mappings
                         SetCountV1Error::CounterMustBeWriteable => 0x04,
                         SetCountV1Error::CounterAddressMismatch { .. } => 0x05,
-                        SetCountV1Error::CounterMustBeOwnedByProgram => 0x06,
+                        // 0x06 reserved (retired: CounterMustBeOwnedByProgram - redundant with address validation)
                         SetCountV1Error::DeserializeError(_) => 0x07,
                         SetCountV1Error::SerializeError(_) => 0x08,
                         // 0x09 reserved (retired: OwnerMismatch - redundant with address validation)
                         SetCountV1Error::SerializedSizeMismatch { .. } => 0x0a,
                         SetCountV1Error::AccountDiscriminatorError(_) => 0x0b,
                         SetCountV1Error::ProgramError(_) => {
+                            unreachable!(
+                                "ProgramError variant should be extracted before this point"
+                            )
+                        }
+                    },
+            ),
+            InstructionError::ReactivateCounterV1(e) => ProgramError::Custom(
+                REACTIVATE_COUNTER_V1_OFFSET
+                    + match e {
+                        ReactivateCounterV1Error::NotEnoughAccounts { .. } => 0x01,
+                        ReactivateCounterV1Error::PayerMustBeSigner => 0x02,
+                        ReactivateCounterV1Error::CounterMustBeWriteable => 0x03,
+                        ReactivateCounterV1Error::CounterAddressMismatch { .. } => 0x04,
+                        // 0x05 reserved (retired: CounterMustBeOwnedByProgram - redundant with address validation)
+                        ReactivateCounterV1Error::SystemProgramAddressMismatch => 0x06,
+                        ReactivateCounterV1Error::DeserializeError(_) => 0x07,
+                        ReactivateCounterV1Error::SerializeError(_) => 0x08,
+                        // 0x09 reserved to maintain existing error code mappings
+                        ReactivateCounterV1Error::SerializedSizeMismatch { .. } => 0x0a,
+                        ReactivateCounterV1Error::AccountDiscriminatorError(_) => 0x0b,
+                        ReactivateCounterV1Error::ProgramError(_) => {
                             unreachable!(
                                 "ProgramError variant should be extracted before this point"
                             )
@@ -195,6 +218,15 @@ impl From<SetCountV1Error> for InstructionError {
         match err {
             SetCountV1Error::ProgramError(pe) => InstructionError::ProgramError(pe),
             _ => InstructionError::SetCountV1(err),
+        }
+    }
+}
+
+impl From<ReactivateCounterV1Error> for InstructionError {
+    fn from(err: ReactivateCounterV1Error) -> Self {
+        match err {
+            ReactivateCounterV1Error::ProgramError(pe) => InstructionError::ProgramError(pe),
+            _ => InstructionError::ReactivateCounterV1(err),
         }
     }
 }
@@ -336,12 +368,7 @@ mod tests {
                     },
                 ),
             ),
-            (
-                0x206,
-                InstructionError::DeactivateCounterV1(
-                    DeactivateCounterV1Error::CounterMustBeOwnedByProgram,
-                ),
-            ),
+            // 0x206 reserved (retired: CounterMustBeOwnedByProgram - redundant with address validation)
             // 0x207 reserved (retired)
             (
                 0x208,
@@ -386,12 +413,7 @@ mod tests {
                     observed: Default::default(),
                 }),
             ),
-            (
-                0x306,
-                InstructionError::IncrementCountV1(
-                    IncrementCountV1Error::CounterMustBeOwnedByProgram,
-                ),
-            ),
+            // 0x306 reserved (retired: CounterMustBeOwnedByProgram - redundant with address validation)
             (
                 0x307,
                 InstructionError::IncrementCountV1(IncrementCountV1Error::DeserializeError(
@@ -450,12 +472,7 @@ mod tests {
                     observed: Default::default(),
                 }),
             ),
-            (
-                0x406,
-                InstructionError::DecrementCountV1(
-                    DecrementCountV1Error::CounterMustBeOwnedByProgram,
-                ),
-            ),
+            // 0x406 reserved (retired: CounterMustBeOwnedByProgram - redundant with address validation)
             (
                 0x407,
                 InstructionError::DecrementCountV1(DecrementCountV1Error::DeserializeError(
@@ -511,10 +528,7 @@ mod tests {
                     observed: Default::default(),
                 }),
             ),
-            (
-                0x506,
-                InstructionError::SetCountV1(SetCountV1Error::CounterMustBeOwnedByProgram),
-            ),
+            // 0x506 reserved (retired: CounterMustBeOwnedByProgram - redundant with address validation)
             (
                 0x507,
                 InstructionError::SetCountV1(SetCountV1Error::DeserializeError(ReadError::Custom(
@@ -540,6 +554,70 @@ mod tests {
                 InstructionError::SetCountV1(SetCountV1Error::AccountDiscriminatorError(
                     AccountDiscriminatorError::Missing,
                 )),
+            ),
+            // ==============================================================================
+            // ReactivateCounterV1 (0x600 range)
+            // ==============================================================================
+            // 0x600 reserved
+            (
+                0x601,
+                InstructionError::ReactivateCounterV1(
+                    ReactivateCounterV1Error::NotEnoughAccounts {
+                        expected: 3,
+                        observed: 2,
+                    },
+                ),
+            ),
+            (
+                0x602,
+                InstructionError::ReactivateCounterV1(ReactivateCounterV1Error::PayerMustBeSigner),
+            ),
+            // 0x603 reserved (retired: CounterMustBeWriteable - runtime enforces)
+            (
+                0x604,
+                InstructionError::ReactivateCounterV1(
+                    ReactivateCounterV1Error::CounterAddressMismatch {
+                        expected: Default::default(),
+                        observed: Default::default(),
+                    },
+                ),
+            ),
+            // 0x605 reserved (retired: CounterMustBeOwnedByProgram - redundant with address validation)
+            (
+                0x606,
+                InstructionError::ReactivateCounterV1(
+                    ReactivateCounterV1Error::SystemProgramAddressMismatch,
+                ),
+            ),
+            (
+                0x607,
+                InstructionError::ReactivateCounterV1(ReactivateCounterV1Error::DeserializeError(
+                    ReadError::Custom("test"),
+                )),
+            ),
+            (
+                0x608,
+                InstructionError::ReactivateCounterV1(ReactivateCounterV1Error::SerializeError(
+                    WriteError::Custom("test"),
+                )),
+            ),
+            // 0x609 reserved to maintain existing error code mappings
+            (
+                0x60a,
+                InstructionError::ReactivateCounterV1(
+                    ReactivateCounterV1Error::SerializedSizeMismatch {
+                        expected: 100,
+                        observed: 50,
+                    },
+                ),
+            ),
+            (
+                0x60b,
+                InstructionError::ReactivateCounterV1(
+                    ReactivateCounterV1Error::AccountDiscriminatorError(
+                        AccountDiscriminatorError::Missing,
+                    ),
+                ),
             ),
         ];
 

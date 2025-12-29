@@ -21,7 +21,6 @@ pub enum IncrementCountV1Error {
     OwnerMustBeSigner,
     CounterMustBeWriteable,
     CounterAddressMismatch { expected: Pubkey, observed: Pubkey },
-    CounterMustBeOwnedByProgram,
     DeserializeError(ReadError),
     SerializeError(WriteError),
     SerializedSizeMismatch { expected: usize, observed: usize },
@@ -103,10 +102,6 @@ impl<'a> TryFrom<(&Pubkey, &'a [AccountInfo])> for IncrementCountV1Accounts<'a> 
                 expected: expected_counter,
                 observed: *observed_counter,
             });
-        }
-
-        if !counter.is_owned_by(program_id) {
-            return Err(IncrementCountV1Error::CounterMustBeOwnedByProgram);
         }
 
         let counter_data = counter.try_borrow_data()?;

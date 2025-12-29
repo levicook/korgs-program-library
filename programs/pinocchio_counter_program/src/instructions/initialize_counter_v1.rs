@@ -25,6 +25,7 @@ pub enum InitializeCounterV1Error {
     ProgramError(ProgramError),
     NotEnoughAccounts { expected: usize, observed: usize },
     PayerMustBeSigner,
+    PayerMustBeWriteable,
     CounterMustBeWriteable,
     CounterAddressMismatch { expected: Pubkey, observed: Pubkey },
     CounterMustBeEmpty,
@@ -112,6 +113,10 @@ impl<'a> TryFrom<(&Pubkey, &'a [AccountInfo])> for InitializeCounterV1Accounts<'
 
         if !payer.is_signer() {
             return Err(InitializeCounterV1Error::PayerMustBeSigner);
+        }
+
+        if !payer.is_writable() {
+            return Err(InitializeCounterV1Error::PayerMustBeWriteable);
         }
 
         if !counter.is_writable() {

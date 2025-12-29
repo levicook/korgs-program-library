@@ -294,7 +294,7 @@ fn fails_when_counter_not_writable() -> TestResult {
 
     let tx_result = ctx.send_transaction(malicious_tx);
     demand_tx_failure(&tx_result);
-    demand_logs_contain("failed: custom program error: 0x603", &tx_result);
+    demand_logs_contain("failed: custom program error: 0x604", &tx_result);
 
     Ok(())
 }
@@ -337,7 +337,7 @@ fn fails_when_counter_address_mismatch() -> TestResult {
 
     let tx_result = ctx.send_transaction(malicious_tx);
     demand_tx_failure(&tx_result);
-    demand_logs_contain("failed: custom program error: 0x604", &tx_result);
+    demand_logs_contain("failed: custom program error: 0x605", &tx_result);
 
     Ok(())
 }
@@ -419,7 +419,7 @@ fn fails_when_counter_not_deactivated() -> TestResult {
     let tx_result = ctx.send_transaction(reactivate_tx);
     demand_tx_failure(&tx_result);
     // Should fail with AccountDiscriminatorError because it expects DeactivatedAccount
-    demand_logs_contain("failed: custom program error: 0x60b", &tx_result);
+    demand_logs_contain("failed: custom program error: 0x60c", &tx_result);
 
     Ok(())
 }

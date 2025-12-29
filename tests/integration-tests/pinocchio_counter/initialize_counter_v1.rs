@@ -123,7 +123,7 @@ fn fails_when_counter_not_writable() -> TestResult {
 
     let tx_result = ctx.send_transaction(malicious_tx);
     demand_tx_failure(&tx_result);
-    demand_logs_contain("failed: custom program error: 0x103", &tx_result);
+    demand_logs_contain("failed: custom program error: 0x104", &tx_result);
 
     Ok(())
 }
@@ -143,7 +143,7 @@ fn fails_when_counter_address_mismatch() -> TestResult {
 
     let tx_result = ctx.send_transaction(malicious_tx);
     demand_tx_failure(&tx_result);
-    demand_logs_contain("failed: custom program error: 0x104", &tx_result);
+    demand_logs_contain("failed: custom program error: 0x105", &tx_result);
 
     Ok(())
 }
@@ -163,7 +163,7 @@ fn fails_when_system_program_address_mismatch() -> TestResult {
 
     let tx_result = ctx.send_transaction(malicious_tx);
     demand_tx_failure(&tx_result);
-    demand_logs_contain("failed: custom program error: 0x108", &tx_result);
+    demand_logs_contain("failed: custom program error: 0x109", &tx_result);
 
     Ok(())
 }
@@ -194,7 +194,7 @@ fn fails_when_counter_has_pre_existing_data() -> TestResult {
 
     let tx_result2 = ctx.send_transaction(init_counter_tx2);
     demand_tx_failure(&tx_result2);
-    demand_logs_contain("failed: custom program error: 0x105", &tx_result2);
+    demand_logs_contain("failed: custom program error: 0x106", &tx_result2);
 
     Ok(())
 }
@@ -244,8 +244,7 @@ fn fails_when_reinitializing_deactivated_counter() -> TestResult {
 
     let tx_result = ctx.send_transaction(reinit_counter_tx);
     demand_tx_failure(&tx_result);
-    // Should fail because counter.data_is_empty() is false (has 1 byte discriminator)
-    demand_logs_contain("failed: custom program error: 0x105", &tx_result);
+    demand_logs_contain("failed: custom program error: 0x106", &tx_result);
 
     Ok(())
 }

@@ -40,15 +40,16 @@ impl From<InstructionError> for ProgramError {
                     + match e {
                         InitializeCounterV1Error::NotEnoughAccounts { .. } => 0x01,
                         InitializeCounterV1Error::PayerMustBeSigner => 0x02,
-                        InitializeCounterV1Error::CounterMustBeWriteable => 0x03,
-                        InitializeCounterV1Error::CounterAddressMismatch { .. } => 0x04,
-                        InitializeCounterV1Error::CounterMustBeEmpty => 0x05,
-                        InitializeCounterV1Error::CounterMustHaveZeroLamports => 0x06,
-                        InitializeCounterV1Error::CounterMustBeOwnedBySystemProgram => 0x07,
-                        InitializeCounterV1Error::SystemProgramAddressMismatch => 0x08,
-                        InitializeCounterV1Error::DeserializeError(_) => 0x09,
-                        InitializeCounterV1Error::SerializeError(_) => 0x0a,
-                        InitializeCounterV1Error::SerializedSizeMismatch { .. } => 0x0b,
+                        InitializeCounterV1Error::PayerMustBeWriteable => 0x03,
+                        InitializeCounterV1Error::CounterMustBeWriteable => 0x04,
+                        InitializeCounterV1Error::CounterAddressMismatch { .. } => 0x05,
+                        InitializeCounterV1Error::CounterMustBeEmpty => 0x06,
+                        InitializeCounterV1Error::CounterMustHaveZeroLamports => 0x07,
+                        InitializeCounterV1Error::CounterMustBeOwnedBySystemProgram => 0x08,
+                        InitializeCounterV1Error::SystemProgramAddressMismatch => 0x09,
+                        InitializeCounterV1Error::DeserializeError(_) => 0x0a,
+                        InitializeCounterV1Error::SerializeError(_) => 0x0b,
+                        InitializeCounterV1Error::SerializedSizeMismatch { .. } => 0x0c,
                         InitializeCounterV1Error::ProgramError(_) => {
                             unreachable!(
                                 "ProgramError variant should be extracted before this point"
@@ -145,15 +146,16 @@ impl From<InstructionError> for ProgramError {
                     + match e {
                         ReactivateCounterV1Error::NotEnoughAccounts { .. } => 0x01,
                         ReactivateCounterV1Error::PayerMustBeSigner => 0x02,
-                        ReactivateCounterV1Error::CounterMustBeWriteable => 0x03,
-                        ReactivateCounterV1Error::CounterAddressMismatch { .. } => 0x04,
-                        // 0x05 reserved (retired: CounterMustBeOwnedByProgram - redundant with address validation)
-                        ReactivateCounterV1Error::SystemProgramAddressMismatch => 0x06,
-                        ReactivateCounterV1Error::DeserializeError(_) => 0x07,
-                        ReactivateCounterV1Error::SerializeError(_) => 0x08,
-                        // 0x09 reserved to maintain existing error code mappings
-                        ReactivateCounterV1Error::SerializedSizeMismatch { .. } => 0x0a,
-                        ReactivateCounterV1Error::AccountDiscriminatorError(_) => 0x0b,
+                        ReactivateCounterV1Error::PayerMustBeWriteable => 0x03,
+                        ReactivateCounterV1Error::CounterMustBeWriteable => 0x04,
+                        ReactivateCounterV1Error::CounterAddressMismatch { .. } => 0x05,
+                        // 0x06 reserved (retired: CounterMustBeOwnedByProgram - redundant with address validation)
+                        ReactivateCounterV1Error::SystemProgramAddressMismatch => 0x07,
+                        ReactivateCounterV1Error::DeserializeError(_) => 0x08,
+                        ReactivateCounterV1Error::SerializeError(_) => 0x09,
+                        // 0x0a reserved to maintain existing error code mappings
+                        ReactivateCounterV1Error::SerializedSizeMismatch { .. } => 0x0b,
+                        ReactivateCounterV1Error::AccountDiscriminatorError(_) => 0x0c,
                         ReactivateCounterV1Error::ProgramError(_) => {
                             unreachable!(
                                 "ProgramError variant should be extracted before this point"
@@ -275,11 +277,17 @@ mod tests {
             (
                 0x103,
                 InstructionError::InitializeCounterV1(
-                    InitializeCounterV1Error::CounterMustBeWriteable,
+                    InitializeCounterV1Error::PayerMustBeWriteable,
                 ),
             ),
             (
                 0x104,
+                InstructionError::InitializeCounterV1(
+                    InitializeCounterV1Error::CounterMustBeWriteable,
+                ),
+            ),
+            (
+                0x105,
                 InstructionError::InitializeCounterV1(
                     InitializeCounterV1Error::CounterAddressMismatch {
                         expected: Default::default(),
@@ -288,41 +296,41 @@ mod tests {
                 ),
             ),
             (
-                0x105,
+                0x106,
                 InstructionError::InitializeCounterV1(InitializeCounterV1Error::CounterMustBeEmpty),
             ),
             (
-                0x106,
+                0x107,
                 InstructionError::InitializeCounterV1(
                     InitializeCounterV1Error::CounterMustHaveZeroLamports,
                 ),
             ),
             (
-                0x107,
+                0x108,
                 InstructionError::InitializeCounterV1(
                     InitializeCounterV1Error::CounterMustBeOwnedBySystemProgram,
                 ),
             ),
             (
-                0x108,
+                0x109,
                 InstructionError::InitializeCounterV1(
                     InitializeCounterV1Error::SystemProgramAddressMismatch,
                 ),
             ),
             (
-                0x109,
+                0x10a,
                 InstructionError::InitializeCounterV1(InitializeCounterV1Error::DeserializeError(
                     ReadError::Custom("test"),
                 )),
             ),
             (
-                0x10a,
+                0x10b,
                 InstructionError::InitializeCounterV1(InitializeCounterV1Error::SerializeError(
                     WriteError::Custom("test"),
                 )),
             ),
             (
-                0x10b,
+                0x10c,
                 InstructionError::InitializeCounterV1(
                     InitializeCounterV1Error::SerializedSizeMismatch {
                         expected: 100,
@@ -572,9 +580,20 @@ mod tests {
                 0x602,
                 InstructionError::ReactivateCounterV1(ReactivateCounterV1Error::PayerMustBeSigner),
             ),
-            // 0x603 reserved (retired: CounterMustBeWriteable - runtime enforces)
+            (
+                0x603,
+                InstructionError::ReactivateCounterV1(
+                    ReactivateCounterV1Error::PayerMustBeWriteable,
+                ),
+            ),
             (
                 0x604,
+                InstructionError::ReactivateCounterV1(
+                    ReactivateCounterV1Error::CounterMustBeWriteable,
+                ),
+            ),
+            (
+                0x605,
                 InstructionError::ReactivateCounterV1(
                     ReactivateCounterV1Error::CounterAddressMismatch {
                         expected: Default::default(),
@@ -582,28 +601,28 @@ mod tests {
                     },
                 ),
             ),
-            // 0x605 reserved (retired: CounterMustBeOwnedByProgram - redundant with address validation)
+            // 0x606 reserved (retired: CounterMustBeOwnedByProgram - redundant with address validation)
             (
-                0x606,
+                0x607,
                 InstructionError::ReactivateCounterV1(
                     ReactivateCounterV1Error::SystemProgramAddressMismatch,
                 ),
             ),
             (
-                0x607,
+                0x608,
                 InstructionError::ReactivateCounterV1(ReactivateCounterV1Error::DeserializeError(
                     ReadError::Custom("test"),
                 )),
             ),
             (
-                0x608,
+                0x609,
                 InstructionError::ReactivateCounterV1(ReactivateCounterV1Error::SerializeError(
                     WriteError::Custom("test"),
                 )),
             ),
-            // 0x609 reserved to maintain existing error code mappings
+            // 0x60a reserved to maintain existing error code mappings
             (
-                0x60a,
+                0x60b,
                 InstructionError::ReactivateCounterV1(
                     ReactivateCounterV1Error::SerializedSizeMismatch {
                         expected: 100,
@@ -612,7 +631,7 @@ mod tests {
                 ),
             ),
             (
-                0x60b,
+                0x60c,
                 InstructionError::ReactivateCounterV1(
                     ReactivateCounterV1Error::AccountDiscriminatorError(
                         AccountDiscriminatorError::Missing,

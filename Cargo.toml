@@ -19,6 +19,8 @@ similar_names = "allow"
 [workspace.dependencies]
 pinocchio_counter_program = { path = "programs/pinocchio_counter_program" }
 pinocchio_counter_client = { path = "clients/rust/pinocchio_counter_client" }
+pinocchio_sol_vault_program = { path = "programs/pinocchio_sol_vault_program" }
+pinocchio_sol_vault_client = { path = "clients/rust/pinocchio_sol_vault_client" }
 
 # DO NOT ADD kani here. The crate is a useless placeholder.
 bolero = "0.13.4"

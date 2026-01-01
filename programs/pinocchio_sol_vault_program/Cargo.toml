@@ -1,0 +1,21 @@
+[package]
+name = "pinocchio_sol_vault_program"
+version = { workspace = true }
+edition = { workspace = true }
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[features]
+no-entrypoint = []
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = [
+    'cfg(target_os, values("solana"))',
+] }
+
+[dependencies]
+pinocchio = { workspace = true }
+pinocchio-system = { workspace = true }
+thiserror = { workspace = true, default-features = false }
+

@@ -10,6 +10,8 @@ path = "lib.rs"
 litesvm = { workspace = true }
 pinocchio_counter_client = { workspace = true }
 pinocchio_counter_program = { workspace = true, features = ["no-entrypoint"] }
+pinocchio_sol_vault_client = { workspace = true }
+pinocchio_sol_vault_program = { workspace = true, features = ["no-entrypoint"] }
 solana-account = { workspace = true }
 solana-clock = { workspace = true }
 solana-hash = { workspace = true }

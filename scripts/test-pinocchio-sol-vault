@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+cd "$REPO_ROOT"
+
+UNIT_ONLY=false
+INTEGRATION_ONLY=false
+FUZZ_ONLY=false
+FORMAL_ONLY=false
+ALL=false
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --unit-only)
+            UNIT_ONLY=true
+            shift
+            ;;
+        --integration-only)
+            INTEGRATION_ONLY=true
+            shift
+            ;;
+        --fuzz-only)
+            FUZZ_ONLY=true
+            shift
+            ;;
+        --formal-only)
+            FORMAL_ONLY=true
+            shift
+            ;;
+        --all)
+            ALL=true
+            shift
+            ;;
+        *)
+            echo "Unknown option: $1"
+            echo "Usage: $0 [--unit-only] [--integration-only] [--fuzz-only] [--formal-only] [--all]"
+            exit 1
+            ;;
+    esac
+done
+
+if [ "$ALL" = true ]; then
+    UNIT_ONLY=false
+    INTEGRATION_ONLY=false
+    FUZZ_ONLY=false
+    FORMAL_ONLY=false
+fi
+
+# Default: unit + integration
+if [ "$UNIT_ONLY" = false ] && [ "$INTEGRATION_ONLY" = false ] && [ "$FUZZ_ONLY" = false ] && [ "$FORMAL_ONLY" = false ]; then
+    UNIT_ONLY=true
+    INTEGRATION_ONLY=true
+fi
+
+if [ "$UNIT_ONLY" = true ] || [ "$ALL" = true ]; then
+    echo "Running unit tests for pinocchio_sol_vault_program..."
+    cargo test -p pinocchio_sol_vault_program
+fi
+
+if [ "$INTEGRATION_ONLY" = true ] || [ "$ALL" = true ]; then
+    echo "Running integration tests for pinocchio_sol_vault..."
+    cargo test -p integration-tests pinocchio_sol_vault
+fi
+
+if [ "$FUZZ_ONLY" = true ] || [ "$ALL" = true ]; then
+    echo "Running fuzz tests for pinocchio_sol_vault..."
+    cargo test -p fuzz-tests pinocchio_sol_vault
+fi
+
+if [ "$FORMAL_ONLY" = true ] || [ "$ALL" = true ]; then
+    echo "Running formal verification tests for pinocchio_sol_vault..."
+    cargo test -p formal-verification-tests pinocchio_sol_vault
+fi
+
+echo "Tests complete!"
+

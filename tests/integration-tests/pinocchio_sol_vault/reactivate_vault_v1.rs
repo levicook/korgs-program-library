@@ -25,7 +25,7 @@ fn succeeds() -> TestResult {
         owner_kp.insecure_clone(),
         ctx.latest_blockhash(),
     )?;
-    let tx_result = ctx.send_transaction(init_tx.into());
+    let tx_result = ctx.send_transaction(init_tx);
     demand_tx_success(&tx_result);
 
     let vault_pk = find_vault_v1_address(&ctx.program_id(), &owner_pk);
@@ -36,7 +36,7 @@ fn succeeds() -> TestResult {
         owner_kp.insecure_clone(),
         ctx.latest_blockhash(),
     )?;
-    let tx_result = ctx.send_transaction(deactivate_tx.into());
+    let tx_result = ctx.send_transaction(deactivate_tx);
     demand_tx_success(&tx_result);
 
     // Verify deactivated
@@ -49,7 +49,7 @@ fn succeeds() -> TestResult {
     // Reactivate
     let reactivate_tx =
         ReactivateVaultV1SimpleTx::try_new(ctx.program_id(), owner_kp, ctx.latest_blockhash())?;
-    let tx_result = ctx.send_transaction(reactivate_tx.into());
+    let tx_result = ctx.send_transaction(reactivate_tx);
     demand_tx_success(&tx_result);
 
     // Verify reactivated

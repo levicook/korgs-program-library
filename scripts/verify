@@ -1,0 +1,48 @@
+#!/bin/bash
+set -euo pipefail
+
+source $(dirname $0)/env.sh
+cd $PROJECT_ROOT
+
+show_usage() {
+    cat <<EOF
+Usage: $0 [OPTIONS]
+
+Options:
+    --all     Run all tests including fuzz and formal verification
+    --help    Show this help message
+
+Examples:
+    $0        # env + lint + build + tests (unit + integration)
+    $0 --all  # Everything including fuzz and formal verification
+EOF
+    exit 0
+}
+
+RUN_ALL_TESTS=false
+SKIP_ENV=false
+SKIP_LINT=false
+TEST_ARGS=""
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --all)
+            RUN_ALL_TESTS=true
+            TEST_ARGS="--all"
+            shift
+            ;;
+        --help|-h)
+            show_usage
+            ;;
+        *)
+            echo "Unknown option: $1"
+            show_usage
+            ;;
+    esac
+done
+
+$PROJECT_ROOT/scripts/check-env
+$PROJECT_ROOT/scripts/lint
+
+$PROJECT_ROOT/scripts/test-pinocchio-counter $TEST_ARGS
+$PROJECT_ROOT/scripts/test-pinocchio-sol-vault $TEST_ARGS

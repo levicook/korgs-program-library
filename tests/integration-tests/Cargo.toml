@@ -8,6 +8,7 @@ path = "lib.rs"
 
 [dependencies]
 litesvm = { workspace = true }
+pinocchio-system = { workspace = true }
 pinocchio_counter_client = { workspace = true }
 pinocchio_counter_program = { workspace = true, features = ["no-entrypoint"] }
 pinocchio_sol_vault_client = { workspace = true }

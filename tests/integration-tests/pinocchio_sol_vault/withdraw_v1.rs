@@ -22,7 +22,7 @@ fn succeeds() -> TestResult {
         owner_kp.insecure_clone(),
         ctx.latest_blockhash(),
     )?;
-    let tx_result = ctx.send_transaction(init_tx.into());
+    let tx_result = ctx.send_transaction(init_tx);
     demand_tx_success(&tx_result);
 
     // Deposit some SOL
@@ -33,7 +33,7 @@ fn succeeds() -> TestResult {
         deposit_amount,
         ctx.latest_blockhash(),
     )?;
-    let tx_result = ctx.send_transaction(deposit_tx.into());
+    let tx_result = ctx.send_transaction(deposit_tx);
     demand_tx_success(&tx_result);
 
     // Get balances before withdraw
@@ -49,7 +49,7 @@ fn succeeds() -> TestResult {
         withdraw_amount,
         ctx.latest_blockhash(),
     )?;
-    let tx_result = ctx.send_transaction(withdraw_tx.into());
+    let tx_result = ctx.send_transaction(withdraw_tx);
     demand_tx_success(&tx_result);
 
     // Verify balances

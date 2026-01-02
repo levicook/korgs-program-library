@@ -8,9 +8,6 @@ echo "> cargo-binstall v${BINSTALL_VERSION} installed..."
 cargo binstall kani-verifier@${KANI_VERIFIER_VERSION} --no-confirm
 echo "> kani-verifier v${KANI_VERIFIER_VERSION} installed..."
 
-cargo binstall solana-cli@${SOLANA_CLI_VERSION} --no-confirm
-echo "> solana-cli v${SOLANA_CLI_VERSION} installed..."
-
 # Ensure platform tools match (requires agave-install to be installed separately)
 if command -v agave-install &> /dev/null; then
     CURRENT_PLATFORM_VERSION=$(cargo build-sbf --version 2>&1 | head -n1 | awk '{print $2}' || echo "")
@@ -24,6 +21,23 @@ else
     echo "⚠ Warning: agave-install not found."
     echo "  Install it once with: sh -c \"\$(curl -sSfL https://release.anza.xyz/v${SOLANA_CLI_VERSION}/install)\""
     echo "  Then run setup-env again."
+fi
+
+# Install git pre-push hook
+if [ -d "$PROJECT_ROOT/.git" ]; then
+    echo "> Installing git pre-push hook..."
+    mkdir -p "$PROJECT_ROOT/.git/hooks"
+    if [ -L "$PROJECT_ROOT/.git/hooks/pre-push" ] || [ -f "$PROJECT_ROOT/.git/hooks/pre-push" ]; then
+        if [ "$(readlink -f "$PROJECT_ROOT/.git/hooks/pre-push" 2>/dev/null)" = "$(readlink -f "$PROJECT_ROOT/scripts/pre-push" 2>/dev/null)" ]; then
+            echo "> Git pre-push hook already installed"
+        else
+            echo "⚠ Warning: Git pre-push hook exists but points elsewhere. Skipping installation."
+            echo "  To install manually: ln -sf $PROJECT_ROOT/scripts/pre-push $PROJECT_ROOT/.git/hooks/pre-push"
+        fi
+    else
+        ln -sf "$PROJECT_ROOT/scripts/pre-push" "$PROJECT_ROOT/.git/hooks/pre-push"
+        echo "> Git pre-push hook installed"
+    fi
 fi
 
 echo "> Setup complete!"

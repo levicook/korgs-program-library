@@ -25,6 +25,7 @@ pub enum DepositV1Error {
     VaultMustBeWriteable,
     VaultAddressMismatch { expected: Pubkey, observed: Pubkey },
     VaultMustBeOwnedByProgram,
+    SystemProgramAddressMismatch,
     AccountDiscriminatorError(AccountDiscriminatorError),
     InvalidInstructionData,
     OwnerMismatch { expected: Pubkey, observed: Pubkey },
@@ -145,9 +146,7 @@ impl<'a> TryFrom<(&Pubkey, &'a [AccountInfo])> for DepositV1Accounts<'a> {
         AccountDiscriminator::check(AccountDiscriminator::VaultV1Account, &vault_data)?;
 
         if system_program.key() != &pinocchio_system::ID {
-            return Err(DepositV1Error::ProgramError(
-                ProgramError::IncorrectProgramId,
-            ));
+            return Err(DepositV1Error::SystemProgramAddressMismatch);
         }
 
         Ok(Self {

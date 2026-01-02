@@ -1,16 +1,14 @@
-#!/usr/bin/env bash
+#!/bin/bash
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+source $(dirname $0)/env.sh
 
-cd "$REPO_ROOT"
+echo "> Building pinocchio_sol_vault_program..."
+cd $PROJECT_ROOT/programs/pinocchio_sol_vault_program
+cargo build-sbf
 
-echo "Building pinocchio_sol_vault_program..."
-cargo build-sbf --manifest-path programs/pinocchio_sol_vault_program/Cargo.toml
+echo "> Building pinocchio_sol_vault_client..."
+cd $PROJECT_ROOT/clients/rust/pinocchio_sol_vault_client
+cargo build -p pinocchio_sol_vault_client
 
-echo "Building pinocchio_sol_vault_client..."
-cargo build --manifest-path clients/rust/pinocchio_sol_vault_client/Cargo.toml
-
-echo "Build complete!"
-
+echo "> Build complete!"

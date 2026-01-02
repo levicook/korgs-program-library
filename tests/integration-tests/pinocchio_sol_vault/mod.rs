@@ -101,7 +101,7 @@ impl TestContext {
     ///
     /// Returns an error if the transaction fails.
     #[allow(clippy::result_large_err)] // TransactionResult from litesvm has large error variant
-    pub fn send_transaction(&mut self, tx: VersionedTransaction) -> TransactionResult {
+    pub fn send_transaction(&mut self, tx: impl Into<VersionedTransaction>) -> TransactionResult {
         self.svm.send_transaction(tx)
     }
 }

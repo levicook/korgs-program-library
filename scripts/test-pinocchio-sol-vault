@@ -1,79 +1,137 @@
-#!/usr/bin/env bash
+#!/bin/bash
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+source $(dirname $0)/env.sh
+cd $PROJECT_ROOT
 
-cd "$REPO_ROOT"
+run_unit_tests() {
+    echo "> Unit testing pinocchio_sol_vault_program..."
+    cd $PROJECT_ROOT/programs/pinocchio_sol_vault_program
+    cargo test-sbf
+    cd $PROJECT_ROOT
 
-UNIT_ONLY=false
-INTEGRATION_ONLY=false
-FUZZ_ONLY=false
-FORMAL_ONLY=false
-ALL=false
+    echo "> Unit testing pinocchio_sol_vault_client..."
+    cargo test -p pinocchio_sol_vault_client
+}
+
+run_integration_tests() {
+    echo "> Integration testing pinocchio_sol_vault..."
+    cargo test -p integration-tests pinocchio_sol_vault
+}
+
+run_fuzz_tests() {
+    echo "> Fuzz testing pinocchio_sol_vault..."
+    cargo test -p fuzz-tests pinocchio_sol_vault
+}
+
+run_formal_verification_tests() {
+    echo "> Formal verification testing pinocchio_sol_vault..."
+    cargo kani -p formal-verification-tests
+}
+
+run_all_tests() {
+    run_unit_tests
+    run_integration_tests
+    run_fuzz_tests
+    run_formal_verification_tests
+}
+
+show_usage() {
+    cat <<EOF
+Usage: $0 [OPTIONS]
+
+Options:
+    --unit-only              Run only unit tests
+    --integration-only       Run only integration tests
+    --fuzz-only              Run only fuzz tests
+    --formal-only            Run only formal verification tests
+    --all                    Run all test types (unit, integration, fuzz, formal)
+    --help                   Show this help message
+
+Examples:
+    $0                       # Fast: unit + integration tests (default)
+    $0 --all                 # Run everything
+    $0 --fuzz-only           # Just fuzz tests
+
+Note: For test filtering, use cargo directly:
+    cargo test -p integration-tests pinocchio_sol_vault deposit_v1
+EOF
+    exit 0
+}
+
+# Parse arguments first (before building)
+TEST_TYPE="default"
 
 while [[ $# -gt 0 ]]; do
-    case $1 in
+    case "$1" in
         --unit-only)
-            UNIT_ONLY=true
+            TEST_TYPE="unit"
             shift
             ;;
         --integration-only)
-            INTEGRATION_ONLY=true
+            TEST_TYPE="integration"
             shift
             ;;
         --fuzz-only)
-            FUZZ_ONLY=true
+            TEST_TYPE="fuzz"
             shift
             ;;
         --formal-only)
-            FORMAL_ONLY=true
+            TEST_TYPE="formal"
             shift
             ;;
         --all)
-            ALL=true
+            TEST_TYPE="all"
             shift
+            ;;
+        --help|-h)
+            show_usage
             ;;
         *)
             echo "Unknown option: $1"
-            echo "Usage: $0 [--unit-only] [--integration-only] [--fuzz-only] [--formal-only] [--all]"
-            exit 1
+            show_usage
             ;;
     esac
 done
 
-if [ "$ALL" = true ]; then
-    UNIT_ONLY=false
-    INTEGRATION_ONLY=false
-    FUZZ_ONLY=false
-    FORMAL_ONLY=false
+# Build program only if needed (integration tests need the .so file)
+# Unit, formal verification and fuzz tests build their own artifacts currently.
+needs_build=false
+case "$TEST_TYPE" in
+    integration|all|default)
+        needs_build=true
+        ;;
+    unit|formal|fuzz)
+        needs_build=false
+        ;;
+esac
+
+if [ "$needs_build" = true ]; then
+    ./scripts/build-pinocchio-sol-vault
 fi
 
-# Default: unit + integration
-if [ "$UNIT_ONLY" = false ] && [ "$INTEGRATION_ONLY" = false ] && [ "$FUZZ_ONLY" = false ] && [ "$FORMAL_ONLY" = false ]; then
-    UNIT_ONLY=true
-    INTEGRATION_ONLY=true
-fi
+# Run tests based on type
+case "$TEST_TYPE" in
+    unit)
+        run_unit_tests
+        ;;
+    integration)
+        run_integration_tests
+        ;;
+    fuzz)
+        run_fuzz_tests
+        ;;
+    formal)
+        run_formal_verification_tests
+        ;;
+    all)
+        run_all_tests
+        ;;
+    default)
+        # Fast feedback: unit + integration only
+        run_unit_tests
+        run_integration_tests
+        ;;
+esac
 
-if [ "$UNIT_ONLY" = true ] || [ "$ALL" = true ]; then
-    echo "Running unit tests for pinocchio_sol_vault_program..."
-    cargo test -p pinocchio_sol_vault_program
-fi
-
-if [ "$INTEGRATION_ONLY" = true ] || [ "$ALL" = true ]; then
-    echo "Running integration tests for pinocchio_sol_vault..."
-    cargo test -p integration-tests pinocchio_sol_vault
-fi
-
-if [ "$FUZZ_ONLY" = true ] || [ "$ALL" = true ]; then
-    echo "Running fuzz tests for pinocchio_sol_vault..."
-    cargo test -p fuzz-tests pinocchio_sol_vault
-fi
-
-if [ "$FORMAL_ONLY" = true ] || [ "$ALL" = true ]; then
-    echo "Running formal verification tests for pinocchio_sol_vault..."
-    cargo test -p formal-verification-tests pinocchio_sol_vault
-fi
-
-echo "Tests complete!"
-
+echo "> Test complete!"

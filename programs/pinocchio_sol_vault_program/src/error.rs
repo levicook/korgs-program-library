@@ -62,9 +62,10 @@ impl From<InstructionError> for ProgramError {
                         DepositV1Error::VaultMustBeWriteable => 0x04,
                         DepositV1Error::VaultAddressMismatch { .. } => 0x05,
                         DepositV1Error::VaultMustBeOwnedByProgram => 0x06,
-                        DepositV1Error::AccountDiscriminatorError(_) => 0x07,
-                        DepositV1Error::InvalidInstructionData => 0x08,
-                        DepositV1Error::OwnerMismatch { .. } => 0x09,
+                        DepositV1Error::SystemProgramAddressMismatch => 0x07,
+                        DepositV1Error::AccountDiscriminatorError(_) => 0x08,
+                        DepositV1Error::InvalidInstructionData => 0x09,
+                        DepositV1Error::OwnerMismatch { .. } => 0x0a,
                         DepositV1Error::ProgramError(_) => {
                             unreachable!(
                                 "ProgramError variant should be extracted before this point"
